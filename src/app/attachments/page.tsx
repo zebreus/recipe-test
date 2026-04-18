@@ -15,6 +15,13 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Plus, Trash2, FileText, StickyNote } from "lucide-react";
 import { generateId, formatDate } from "@/lib/utils";
 import type { Note, Attachment } from "@/lib/types";
@@ -254,47 +261,54 @@ export default function AttachmentsPage() {
                 <div className="space-y-1">
                   {editingNote.linkedTo.map((link, i) => (
                     <div key={i} className="flex gap-2 items-center">
-                      <select
-                        className="border rounded px-2 py-1 text-xs flex-1"
+                      <Select
                         value={link.entityType}
-                        onChange={(e) => {
+                        onValueChange={(val) => {
                           const updated = [...editingNote.linkedTo];
-                          updated[i] = { ...updated[i], entityType: e.target.value };
+                          updated[i] = { ...updated[i], entityType: val };
                           setEditingNote({ ...editingNote, linkedTo: updated });
                         }}
                       >
-                        <option value="formula">Formula</option>
-                        <option value="protocol">Protocol</option>
-                        <option value="trial">Trial</option>
-                        <option value="ingredient">Ingredient</option>
-                      </select>
-                      <select
-                        className="border rounded px-2 py-1 text-xs flex-1"
-                        value={link.entityId}
-                        onChange={(e) => {
+                        <SelectTrigger className="flex-1 h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="formula">Formula</SelectItem>
+                          <SelectItem value="protocol">Protocol</SelectItem>
+                          <SelectItem value="trial">Trial</SelectItem>
+                          <SelectItem value="ingredient">Ingredient</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select
+                        value={link.entityId || undefined}
+                        onValueChange={(val) => {
                           const updated = [...editingNote.linkedTo];
-                          updated[i] = { ...updated[i], entityId: e.target.value };
+                          updated[i] = { ...updated[i], entityId: val };
                           setEditingNote({ ...editingNote, linkedTo: updated });
                         }}
                       >
-                        <option value="">Select...</option>
-                        {link.entityType === "formula" &&
-                          data.formulas.map((f) => (
-                            <option key={f.id} value={f.id}>{f.name}</option>
-                          ))}
-                        {link.entityType === "protocol" &&
-                          data.protocols.map((p) => (
-                            <option key={p.id} value={p.id}>{p.name}</option>
-                          ))}
-                        {link.entityType === "trial" &&
-                          data.trials.map((t) => (
-                            <option key={t.id} value={t.id}>Trial #{t.runNumber}</option>
-                          ))}
-                        {link.entityType === "ingredient" &&
-                          data.ingredients.map((ing) => (
-                            <option key={ing.id} value={ing.id}>{ing.name}</option>
-                          ))}
-                      </select>
+                        <SelectTrigger className="flex-1 h-8 text-xs">
+                          <SelectValue placeholder="Select..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {link.entityType === "formula" &&
+                            data.formulas.map((f) => (
+                              <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                            ))}
+                          {link.entityType === "protocol" &&
+                            data.protocols.map((p) => (
+                              <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                            ))}
+                          {link.entityType === "trial" &&
+                            data.trials.map((t) => (
+                              <SelectItem key={t.id} value={t.id}>Trial #{t.runNumber}</SelectItem>
+                            ))}
+                          {link.entityType === "ingredient" &&
+                            data.ingredients.map((ing) => (
+                              <SelectItem key={ing.id} value={ing.id}>{ing.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
                       <Button
                         variant="ghost"
                         size="icon"

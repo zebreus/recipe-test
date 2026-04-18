@@ -22,16 +22,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Link from "next/link";
-import { Plus, Trash2, TestTube, Copy } from "lucide-react";
+import { Plus, Trash2, TestTube, Copy, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { generateId, statusColor, formatDate } from "@/lib/utils";
 import type { Trial } from "@/lib/types";
 import { calculateSimilarityScore } from "@/lib/solver";
+
+const STATUS_OPTIONS = ["all", "planned", "in-progress", "completed", "failed", "abandoned"] as const;
 
 export default function TrialsPage() {
   const { data, addTrial, deleteTrial } = useStore();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newFormulaId, setNewFormulaId] = useState("");
   const [newProtocolId, setNewProtocolId] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   function handleCreate() {
     if (!newFormulaId || !newProtocolId) return;
@@ -94,6 +99,20 @@ export default function TrialsPage() {
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
+  const filteredTrials = sortedTrials.filter((trial) => {
+    if (statusFilter !== "all" && trial.status !== statusFilter) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const formula = data.formulas.find((f) => f.id === trial.formulaId);
+      const protocol = data.protocols.find((p) => p.id === trial.protocolId);
+      const matchesNotes = trial.notes.toLowerCase().includes(q);
+      const matchesFormula = formula?.name.toLowerCase().includes(q) ?? false;
+      const matchesProtocol = protocol?.name.toLowerCase().includes(q) ?? false;
+      if (!matchesNotes && !matchesFormula && !matchesProtocol) return false;
+    }
+    return true;
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -110,19 +129,50 @@ export default function TrialsPage() {
         </Button>
       </div>
 
-      {sortedTrials.length === 0 ? (
+      {/* Search & filter bar */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
+          <Input
+            placeholder="Search notes, formula, protocol..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-8"
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-44">
+            <SelectValue placeholder="All statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            {STATUS_OPTIONS.map((s) => (
+              <SelectItem key={s} value={s}>
+                {s === "all" ? "All statuses" : s.charAt(0).toUpperCase() + s.slice(1)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {filteredTrials.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-sm text-gray-400 dark:text-gray-500">
             <TestTube className="h-8 w-8 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
-            <p>No trials recorded yet.</p>
-            <p className="mt-1">
-              Create a formula and protocol first, then log a trial.
-            </p>
+            {data.trials.length === 0 ? (
+              <>
+                <p>No trials recorded yet.</p>
+                <p className="mt-1">
+                  Create a formula and protocol first, then log a trial.
+                </p>
+              </>
+            ) : (
+              <p>No trials match your filters.</p>
+            )}
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-3">
-          {sortedTrials.map((trial) => {
+          {filteredTrials.map((trial) => {
             const formula = data.formulas.find(
               (f) => f.id === trial.formulaId
             );

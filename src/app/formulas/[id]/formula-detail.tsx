@@ -207,12 +207,19 @@ export default function FormulaDetailClient({ id }: { id: string }) {
                           <tr className="border-b text-left text-gray-500 dark:text-gray-400">
                             <th className="pb-2 font-medium">Ingredient</th>
                             <th className="pb-2 font-medium w-28">Mass (g)</th>
+                            <th className="pb-2 font-medium w-24">Cost</th>
                             <th className="pb-2 font-medium w-16">Lock</th>
                             <th className="pb-2 font-medium w-12"></th>
                           </tr>
                         </thead>
                         <tbody>
                           {local.ingredientLines.map((line, idx) => {
+                            const ing = ingredients.find(
+                              (i) => i.id === line.ingredientId
+                            );
+                            const lineCost = ing
+                              ? (line.massG * ing.costPerKg) / 1000
+                              : 0;
                             return (
                               <tr
                                 key={idx}
@@ -255,6 +262,9 @@ export default function FormulaDetailClient({ id }: { id: string }) {
                                     }
                                   />
                                 </td>
+                                <td className="py-2 text-right text-gray-700 dark:text-gray-300 tabular-nums">
+                                  ${lineCost.toFixed(2)}
+                                </td>
                                 <td className="py-2 text-center">
                                   <Button
                                     variant="ghost"
@@ -287,6 +297,22 @@ export default function FormulaDetailClient({ id }: { id: string }) {
                             );
                           })}
                         </tbody>
+                        <tfoot>
+                          <tr className="border-t">
+                            <td className="py-2 font-medium text-gray-900 dark:text-gray-100">Total</td>
+                            <td className="py-2 font-medium text-gray-900 dark:text-gray-100">
+                              {local.ingredientLines.reduce((sum, l) => sum + l.massG, 0).toFixed(1)} g
+                            </td>
+                            <td className="py-2 text-right font-medium text-gray-900 dark:text-gray-100 tabular-nums">
+                              ${local.ingredientLines.reduce((sum, l) => {
+                                const ing = ingredients.find((i) => i.id === l.ingredientId);
+                                return sum + (ing ? (l.massG * ing.costPerKg) / 1000 : 0);
+                              }, 0).toFixed(2)}
+                            </td>
+                            <td></td>
+                            <td></td>
+                          </tr>
+                        </tfoot>
                       </table>
                     </div>
                   )}
