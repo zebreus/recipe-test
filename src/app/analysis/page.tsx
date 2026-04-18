@@ -189,8 +189,8 @@ export default function AnalysisPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Analysis</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Analysis</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Comparison, ranking, and insights
         </p>
       </div>
@@ -217,14 +217,14 @@ export default function AnalysisPage() {
             </CardHeader>
             <CardContent>
               {rankingRows.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-6">
+                <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-6">
                   No completed trials to rank.
                 </p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b text-left text-gray-500">
+                      <tr className="border-b text-left text-gray-500 dark:text-gray-400">
                         <th className="pb-2 font-medium">#</th>
                         <th className="pb-2 font-medium">Trial</th>
                         <th className="pb-2 font-medium">Formula</th>
@@ -239,7 +239,7 @@ export default function AnalysisPage() {
                         <tr
                           key={row.trialId}
                           className={`border-b last:border-0 ${
-                            row.rank === 1 ? "bg-amber-50" : ""
+                            row.rank === 1 ? "bg-amber-50 dark:bg-amber-950" : ""
                           }`}
                         >
                           <td className="py-2 font-bold">
@@ -248,7 +248,7 @@ export default function AnalysisPage() {
                           <td className="py-2">
                             <Link
                               href={`/trials/${row.trialId}`}
-                              className="text-indigo-600 hover:underline"
+                              className="text-indigo-600 dark:text-indigo-400 hover:underline"
                             >
                               Trial #{row.trial.runNumber}
                             </Link>
@@ -307,7 +307,7 @@ export default function AnalysisPage() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-sm text-gray-400 text-center py-8">
+                <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">
                   No formulas to compare.
                 </p>
               )}
@@ -326,14 +326,14 @@ export default function AnalysisPage() {
             </CardHeader>
             <CardContent>
               {formulas.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-8">
+                <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">
                   No formulas to compare.
                 </p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b text-left text-gray-500">
+                      <tr className="border-b text-left text-gray-500 dark:text-gray-400">
                         <th className="pb-2 font-medium">Component</th>
                         <th className="pb-2 font-medium">Target</th>
                         {formulas.map((f) => (
@@ -356,10 +356,10 @@ export default function AnalysisPage() {
                                 key={f.id}
                                 className={`py-1.5 ${
                                   Math.abs(diff) > 5
-                                    ? "text-red-600 font-medium"
+                                    ? "text-red-600 dark:text-red-400 font-medium"
                                     : Math.abs(diff) > 2
-                                    ? "text-yellow-600"
-                                    : "text-green-600"
+                                    ? "text-yellow-600 dark:text-yellow-400"
+                                    : "text-green-600 dark:text-green-400"
                                 }`}
                               >
                                 {pct[key].toFixed(1)}%
@@ -400,7 +400,7 @@ export default function AnalysisPage() {
             </CardHeader>
             <CardContent>
               {formulas.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-8">
+                <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">
                   No formulas to check.
                 </p>
               ) : (
@@ -417,10 +417,10 @@ export default function AnalysisPage() {
                           <span
                             className={`text-xs px-2 py-1 rounded-full font-medium ${
                               compliance.status === "compliant"
-                                ? "bg-green-100 text-green-800"
+                                ? "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200"
                                 : compliance.status === "warning"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : "bg-red-100 text-red-800"
+                                ? "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200"
+                                : "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200"
                             }`}
                           >
                             {compliance.status === "compliant"
@@ -433,7 +433,7 @@ export default function AnalysisPage() {
                           </span>
                         </div>
                         {compliance.deviations.length > 0 && (
-                          <ul className="text-xs text-gray-600 space-y-1">
+                          <ul className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
                             {compliance.deviations.map((d) => (
                               <li key={d.key} className="flex gap-2">
                                 <span className={d.diff > 5 ? "text-red-500" : "text-yellow-500"}>●</span>
@@ -479,7 +479,7 @@ export default function AnalysisPage() {
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-sm text-gray-400 text-center py-8">
+                <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">
                   Complete trials to see progression.
                 </p>
               )}
@@ -527,7 +527,7 @@ export default function AnalysisPage() {
                   </RadarChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-sm text-gray-400 text-center py-8">
+                <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">
                   Complete trials to see score comparison.
                 </p>
               )}
@@ -548,12 +548,12 @@ export default function AnalysisPage() {
                 {reasoning.map((r, idx) => (
                   <div
                     key={idx}
-                    className="flex items-start gap-2 p-3 rounded-lg bg-gray-50 border"
+                    className="flex items-start gap-2 p-3 rounded-lg bg-gray-50 dark:bg-gray-900 border"
                   >
-                    <span className="text-indigo-500 font-bold text-sm shrink-0">
+                    <span className="text-indigo-500 dark:text-indigo-400 font-bold text-sm shrink-0">
                       {idx + 1}.
                     </span>
-                    <p className="text-sm text-gray-700">{r}</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">{r}</p>
                   </div>
                 ))}
               </div>
@@ -568,7 +568,7 @@ export default function AnalysisPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2 text-sm text-gray-700">
+              <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
                 <li className="flex items-start gap-2">
                   <span className="text-green-500 font-bold">→</span>
                   Duplicate the best trial&apos;s formula and adjust the largest

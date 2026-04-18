@@ -81,8 +81,8 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Settings</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Project configuration, import/export
         </p>
       </div>
@@ -102,7 +102,7 @@ export default function SettingsPage() {
               <Save className="h-4 w-4 mr-1" /> Save
             </Button>
           </div>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-gray-400 dark:text-gray-500">
             Created: {new Date(data.project.createdAt).toLocaleString()}
             {" · "}
             Updated: {new Date(data.project.updatedAt).toLocaleString()}
@@ -115,7 +115,7 @@ export default function SettingsPage() {
           <CardTitle className="text-base">Export Project</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-500 mb-3">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
             Download the entire project as a single JSON file.
           </p>
           <Button onClick={handleExport}>
@@ -129,7 +129,7 @@ export default function SettingsPage() {
           <CardTitle className="text-base">Import Project</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Import a project JSON file to replace the current data.
           </p>
           <div className="flex gap-3">
@@ -167,8 +167,8 @@ export default function SettingsPage() {
             <p
               className={`text-sm ${
                 importStatus.includes("successful")
-                  ? "text-green-600"
-                  : "text-red-600"
+                  ? "text-green-600 dark:text-green-400"
+                  : "text-red-600 dark:text-red-400"
               }`}
             >
               {importStatus}
@@ -184,39 +184,39 @@ export default function SettingsPage() {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div>
-              <p className="text-gray-500">Ingredients</p>
+              <p className="text-gray-500 dark:text-gray-400">Ingredients</p>
               <p className="text-xl font-bold">{data.ingredients.length}</p>
             </div>
             <div>
-              <p className="text-gray-500">Formulas</p>
+              <p className="text-gray-500 dark:text-gray-400">Formulas</p>
               <p className="text-xl font-bold">{data.formulas.length}</p>
             </div>
             <div>
-              <p className="text-gray-500">Protocols</p>
+              <p className="text-gray-500 dark:text-gray-400">Protocols</p>
               <p className="text-xl font-bold">{data.protocols.length}</p>
             </div>
             <div>
-              <p className="text-gray-500">Trials</p>
+              <p className="text-gray-500 dark:text-gray-400">Trials</p>
               <p className="text-xl font-bold">{data.trials.length}</p>
             </div>
             <div>
-              <p className="text-gray-500">Notes</p>
+              <p className="text-gray-500 dark:text-gray-400">Notes</p>
               <p className="text-xl font-bold">{data.notes.length}</p>
             </div>
             <div>
-              <p className="text-gray-500">Attachments</p>
+              <p className="text-gray-500 dark:text-gray-400">Attachments</p>
               <p className="text-xl font-bold">{data.attachments.length}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-red-200">
+      <Card className="border-red-200 dark:border-red-800">
         <CardHeader>
-          <CardTitle className="text-base text-red-600">Danger Zone</CardTitle>
+          <CardTitle className="text-base text-red-600 dark:text-red-400">Danger Zone</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-gray-500 mb-3">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
             Reset to sample/seed data. All current data will be lost.
           </p>
           <Button variant="destructive" onClick={handleReset}>

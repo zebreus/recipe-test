@@ -86,8 +86,8 @@ export default function AttachmentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Notes & Files</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Notes & Files</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Lab notes, evidence, and attachments
         </p>
       </div>
@@ -105,7 +105,7 @@ export default function AttachmentsPage() {
         </CardHeader>
         <CardContent>
           {data.notes.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-6">
+            <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-6">
               No notes yet. Add lab notes, observations, or evidence.
             </p>
           ) : (
@@ -113,19 +113,19 @@ export default function AttachmentsPage() {
               {data.notes.map((note) => (
                 <div
                   key={note.id}
-                  className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer"
+                  className="border rounded-lg p-3 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
                   onClick={() => openEditNote(note)}
                 >
                   <div className="flex items-center justify-between">
                     <p className="font-medium text-sm">{note.title || "Untitled"}</p>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-gray-400 dark:text-gray-500">
                         {formatDate(note.updatedAt)}
                       </span>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 text-red-500"
+                        className="h-6 w-6 text-red-500 dark:text-red-400"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDeleteNote(note.id);
@@ -136,7 +136,7 @@ export default function AttachmentsPage() {
                     </div>
                   </div>
                   {note.content && (
-                    <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
                       {note.content}
                     </p>
                   )}
@@ -145,7 +145,7 @@ export default function AttachmentsPage() {
                       {note.linkedTo.map((link, i) => (
                         <span
                           key={i}
-                          className="text-[10px] bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded"
+                          className="text-[10px] bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 px-1.5 py-0.5 rounded"
                         >
                           {link.entityType}: {link.entityId}
                         </span>
@@ -172,7 +172,7 @@ export default function AttachmentsPage() {
         </CardHeader>
         <CardContent>
           {data.attachments.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-6">
+            <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-6">
               No attachments yet. Add photos, data sheets, or lab records.
             </p>
           ) : (
@@ -184,11 +184,11 @@ export default function AttachmentsPage() {
                 >
                   <div>
                     <p className="font-medium text-sm">{att.name}</p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-400 dark:text-gray-500">
                       {att.type} · {formatDate(att.createdAt)}
                     </p>
                     {att.url && (
-                      <p className="text-xs text-indigo-600 truncate max-w-md">
+                      <p className="text-xs text-indigo-600 dark:text-indigo-400 truncate max-w-md">
                         {att.url}
                       </p>
                     )}
@@ -196,7 +196,7 @@ export default function AttachmentsPage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 text-red-500"
+                    className="h-7 w-7 text-red-500 dark:text-red-400"
                     onClick={() => handleDeleteAttachment(att.id)}
                   >
                     <Trash2 className="h-3.5 w-3.5" />

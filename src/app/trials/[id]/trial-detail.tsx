@@ -53,7 +53,7 @@ export default function TrialDetailClient({ id }: { id: string }) {
             <ArrowLeft className="h-4 w-4 mr-1" /> Back
           </Button>
         </Link>
-        <p className="text-gray-500">Trial not found.</p>
+        <p className="text-gray-500 dark:text-gray-400">Trial not found.</p>
       </div>
     );
   }
@@ -161,7 +161,7 @@ export default function TrialDetailClient({ id }: { id: string }) {
             </Button>
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
               Trial #{local.runNumber}
             </h1>
             <div className="flex gap-2 mt-0.5">
@@ -181,19 +181,19 @@ export default function TrialDetailClient({ id }: { id: string }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-4">
-            <p className="text-xs text-gray-500">Formula</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Formula</p>
             <p className="font-medium">{formula?.name || "—"}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
-            <p className="text-xs text-gray-500">Protocol</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Protocol</p>
             <p className="font-medium">{protocol?.name || "—"}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
-            <p className="text-xs text-gray-500">Status</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Status</p>
             <Select
               value={local.status}
               onValueChange={(v) =>
@@ -248,7 +248,7 @@ export default function TrialDetailClient({ id }: { id: string }) {
                         })
                       }
                     />
-                    <span className="text-xs text-gray-400">/10</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500">/10</span>
                     <Input
                       className="flex-1 h-8"
                       placeholder="Notes..."
@@ -263,7 +263,7 @@ export default function TrialDetailClient({ id }: { id: string }) {
                   <span className="text-sm font-medium">
                     Weighted Score
                   </span>
-                  <span className="text-2xl font-bold text-indigo-600">
+                  <span className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
                     {simScore.toFixed(1)}%
                   </span>
                 </div>
@@ -299,7 +299,7 @@ export default function TrialDetailClient({ id }: { id: string }) {
                     </RadarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <p className="text-sm text-gray-400">No scores yet.</p>
+                  <p className="text-sm text-gray-400 dark:text-gray-500">No scores yet.</p>
                 )}
               </CardContent>
             </Card>
@@ -317,7 +317,7 @@ export default function TrialDetailClient({ id }: { id: string }) {
             </CardHeader>
             <CardContent className="space-y-2">
               {local.observations.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-6">
+                <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-6">
                   No observations recorded.
                 </p>
               ) : (
@@ -349,7 +349,7 @@ export default function TrialDetailClient({ id }: { id: string }) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-red-500 shrink-0"
+                      className="h-8 w-8 text-red-500 dark:text-red-400 shrink-0"
                       onClick={() => removeObservation(idx)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -372,7 +372,7 @@ export default function TrialDetailClient({ id }: { id: string }) {
             </CardHeader>
             <CardContent className="space-y-2">
               {local.measurements.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-6">
+                <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-6">
                   No measurements recorded.
                 </p>
               ) : (
@@ -411,7 +411,7 @@ export default function TrialDetailClient({ id }: { id: string }) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-red-500 shrink-0"
+                      className="h-8 w-8 text-red-500 dark:text-red-400 shrink-0"
                       onClick={() => removeMeasurement(idx)}
                     >
                       <Trash2 className="h-3.5 w-3.5" />

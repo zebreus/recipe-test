@@ -98,8 +98,8 @@ export default function TrialsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Trial Log</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Trial Log</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             {data.trials.length} trial{data.trials.length !== 1 ? "s" : ""}{" "}
             recorded
           </p>
@@ -112,8 +112,8 @@ export default function TrialsPage() {
 
       {sortedTrials.length === 0 ? (
         <Card>
-          <CardContent className="py-12 text-center text-sm text-gray-400">
-            <TestTube className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+          <CardContent className="py-12 text-center text-sm text-gray-400 dark:text-gray-500">
+            <TestTube className="h-8 w-8 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
             <p>No trials recorded yet.</p>
             <p className="mt-1">
               Create a formula and protocol first, then log a trial.
@@ -135,18 +135,18 @@ export default function TrialsPage() {
             return (
               <Card
                 key={trial.id}
-                className="hover:border-gray-300 transition-colors"
+                className="hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
               >
                 <CardContent className="py-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div>
                         <Link href={`/trials/${trial.id}`}>
-                          <p className="font-medium text-indigo-600 hover:underline">
+                          <p className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
                             Trial #{trial.runNumber}
                           </p>
                         </Link>
-                        <p className="text-xs text-gray-500 mt-0.5">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                           {formatDate(trial.createdAt)}
                         </p>
                       </div>
@@ -161,15 +161,15 @@ export default function TrialsPage() {
                         </Badge>
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-bold text-gray-900">
+                        <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
                           {score.toFixed(0)}%
                         </p>
-                        <p className="text-[10px] text-gray-400">Score</p>
+                        <p className="text-[10px] text-gray-400 dark:text-gray-500">Score</p>
                       </div>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 text-gray-500"
+                        className="h-7 w-7 text-gray-500 dark:text-gray-400"
                         onClick={() => handleDuplicate(trial)}
                         title="Duplicate"
                       >
@@ -178,7 +178,7 @@ export default function TrialsPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 text-red-500"
+                        className="h-7 w-7 text-red-500 dark:text-red-400"
                         onClick={() => handleDelete(trial.id)}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -210,7 +210,7 @@ export default function TrialsPage() {
                     )}
                   </div>
                   {trial.notes && (
-                    <p className="text-xs text-gray-500 mt-2 line-clamp-2">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 line-clamp-2">
                       {trial.notes}
                     </p>
                   )}
