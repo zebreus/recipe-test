@@ -30,7 +30,9 @@ import {
   compositionSimilarity,
   ingredientContributions,
   sensitivityAnalysis,
+  checkCompliance,
 } from "@/lib/solver";
+import { Badge } from "@/components/ui/badge";
 import {
   BarChart,
   Bar,
@@ -182,6 +184,7 @@ export default function FormulaDetailClient({ id }: { id: string }) {
           <TabsTrigger value="heatmap">Contribution Heatmap</TabsTrigger>
           <TabsTrigger value="comparison">vs Target</TabsTrigger>
           <TabsTrigger value="sensitivity">Sensitivity</TabsTrigger>
+          <TabsTrigger value="label">Label</TabsTrigger>
           <TabsTrigger value="info">Info</TabsTrigger>
         </TabsList>
 
@@ -583,6 +586,137 @@ export default function FormulaDetailClient({ id }: { id: string }) {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="label">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Section A: Ingredient Declaration */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Ingredient Declaration</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                  {[...local.ingredientLines]
+                    .sort((a, b) => b.massG - a.massG)
+                    .map((line) => {
+                      const ing = ingredients.find((i) => i.id === line.ingredientId);
+                      return `${ing?.name ?? line.ingredientId} (${line.massG.toFixed(1)}g)`;
+                    })
+                    .join(", ") || "No ingredients added."}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Section B: Nutrition Facts per 100g */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Nutrition Facts (per 100g)</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {COMPONENT_KEYS.map((key) => (
+                    <div key={key} className="flex justify-between py-2 text-sm">
+                      <span className="flex items-center gap-1.5 text-gray-700 dark:text-gray-300">
+                        <span
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: COMPONENT_COLORS[key] }}
+                        />
+                        {COMPONENT_LABELS[key]}
+                      </span>
+                      <span className="font-medium tabular-nums text-gray-900 dark:text-gray-100">
+                        {pct[key].toFixed(1)}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Section C: Compliance Status */}
+            {(() => {
+              const compliance = checkCompliance(pct, data.targetProduct.targetComposition);
+              const statusColor =
+                compliance.status === "compliant"
+                  ? { bg: "#16a34a", text: "#ffffff" }
+                  : compliance.status === "warning"
+                  ? { bg: "#eab308", text: "#000000" }
+                  : { bg: "#dc2626", text: "#ffffff" };
+              return (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Compliance Status</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Badge
+                        style={{ backgroundColor: statusColor.bg, color: statusColor.text, borderColor: statusColor.bg }}
+                      >
+                        {compliance.status.replace("-", " ").toUpperCase()}
+                      </Badge>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        Max deviation: {compliance.maxDeviation.toFixed(2)}%
+                      </span>
+                    </div>
+                    {compliance.deviations.length > 0 && (
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                          Deviations (&gt;2%)
+                        </p>
+                        <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                          {compliance.deviations.map((d) => (
+                            <div key={d.key} className="flex justify-between py-1.5 text-sm">
+                              <span className="text-gray-700 dark:text-gray-300">{d.label}</span>
+                              <span className="text-red-600 dark:text-red-400 font-medium tabular-nums">
+                                {pct[d.key as keyof typeof pct].toFixed(1)}% vs{" "}
+                                {data.targetProduct.targetComposition[d.key as keyof typeof pct].toFixed(1)}%
+                                {" "}(Δ {d.diff.toFixed(2)}%)
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })()}
+
+            {/* Section D: Target Deviations */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Deviations from Target</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {COMPONENT_KEYS.map((key) => {
+                    const formulaVal = pct[key];
+                    const targetVal = data.targetProduct.targetComposition[key];
+                    const diff = formulaVal - targetVal;
+                    const absDiff = Math.abs(diff);
+                    const colorClass =
+                      absDiff <= 2
+                        ? "text-green-600 dark:text-green-400"
+                        : absDiff <= 5
+                        ? "text-yellow-600 dark:text-yellow-400"
+                        : "text-red-600 dark:text-red-400";
+                    return (
+                      <div key={key} className="flex justify-between py-2 text-sm">
+                        <span className="text-gray-700 dark:text-gray-300">{COMPONENT_LABELS[key]}</span>
+                        <div className="flex gap-4 tabular-nums">
+                          <span className="text-gray-900 dark:text-gray-100">{formulaVal.toFixed(1)}%</span>
+                          <span className="text-gray-500 dark:text-gray-400">vs {targetVal.toFixed(1)}%</span>
+                          <span className={`font-medium ${colorClass}`}>
+                            {diff >= 0 ? "+" : ""}{diff.toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="info">
