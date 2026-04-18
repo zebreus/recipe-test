@@ -1,7 +1,5 @@
 import TrialDetailClient from "./trial-detail";
 
-export const dynamicParams = false;
-
 export function generateStaticParams() {
   return [{ id: "trial-1" }];
 }

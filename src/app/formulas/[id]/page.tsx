@@ -1,7 +1,5 @@
 import FormulaDetailClient from "./formula-detail";
 
-export const dynamicParams = false;
-
 export function generateStaticParams() {
   return [{ id: "formula-1" }];
 }
