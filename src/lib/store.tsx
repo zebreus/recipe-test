@@ -5,7 +5,6 @@ import {
   useContext,
   useState,
   useCallback,
-  useEffect,
   type ReactNode,
 } from "react";
 import type {
@@ -87,14 +86,8 @@ interface StoreContextValue {
 const StoreContext = createContext<StoreContextValue | null>(null);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<ProjectData>(() => createSeedData());
-  const [loaded, setLoaded] = useState(false);
-
-  // Load data from localStorage on mount (client-side only)
-  useEffect(() => {
-    setData(loadData());
-    setLoaded(true);
-  }, []);
+  const [data, setData] = useState<ProjectData>(loadData);
+  const [loaded] = useState(() => typeof window !== "undefined");
 
   const persist = useCallback((next: ProjectData) => {
     setData(next);
