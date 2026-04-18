@@ -165,6 +165,9 @@ export default function ProtocolDetailClient({ id }: { id: string }) {
               </Button>
             )}
           </div>
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+            Adjusts displayed durations for production scale-up. Display only — does not change saved data.
+          </p>
         </CardContent>
       </Card>
 
@@ -343,6 +346,11 @@ export default function ProtocolDetailClient({ id }: { id: string }) {
                         })
                       }
                     />
+                    {scaleFactor !== 1 && step.durationMin != null && (
+                      <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-0.5">
+                        → {Math.round(step.durationMin * scaleFactor * 10) / 10} min at {scaleFactor}×
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">Agitation</Label>
