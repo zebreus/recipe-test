@@ -183,13 +183,25 @@ export default function TrialDetailClient({ id }: { id: string }) {
         <Card>
           <CardContent className="pt-4">
             <p className="text-xs text-gray-500 dark:text-gray-400">Formula</p>
-            <p className="font-medium">{formula?.name || "—"}</p>
+            {formula ? (
+              <Link href={`/formulas/${formula.id}`} className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
+                {formula.name}
+              </Link>
+            ) : (
+              <p className="font-medium">—</p>
+            )}
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-4">
             <p className="text-xs text-gray-500 dark:text-gray-400">Protocol</p>
-            <p className="font-medium">{protocol?.name || "—"}</p>
+            {protocol ? (
+              <Link href={`/protocols/${protocol.id}`} className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
+                {protocol.name}
+              </Link>
+            ) : (
+              <p className="font-medium">—</p>
+            )}
           </CardContent>
         </Card>
         <Card>

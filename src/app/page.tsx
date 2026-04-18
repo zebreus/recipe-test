@@ -185,7 +185,10 @@ export default function DashboardPage() {
                 </div>
                 {bestFormula && (
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Formula: {bestFormula.name}
+                    Formula:{" "}
+                    <Link href={`/formulas/${bestFormula.id}`} className="text-indigo-600 dark:text-indigo-400 hover:underline">
+                      {bestFormula.name}
+                    </Link>
                   </p>
                 )}
                 <Link href={`/trials/${bestTrial.id}`}>
