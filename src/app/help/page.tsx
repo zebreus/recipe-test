@@ -181,6 +181,30 @@ export default function HelpPage() {
             <h3 className="font-semibold text-gray-800 dark:text-gray-200">10. Anika Johansson — Product Development Intern</h3>
             <p>Anika is new to food science and uses the Getting Started guide to learn the reverse-engineering methodology. She follows the step-by-step workflow, starting with a simple target (recreating a commercial smoothie). The tool&apos;s structure teaches her to think systematically about formulation—defining targets, building ingredient libraries, and iterating based on evidence rather than intuition.</p>
           </div>
+          <div>
+            <h3 className="font-semibold text-gray-800 dark:text-gray-200">11. David Kim — ADHD Food Scientist</h3>
+            <p>David has ADHD and works best when he can jump rapidly between different aspects of a project. He loves that every formula, protocol, and trial name throughout the app is a clickable link—so when he spots &quot;Candidate A&quot; mentioned in a trial result, he can instantly jump to the formula detail, check the heatmap, come back, and compare with a different trial. The cross-linked navigation between sections lets him follow his train of thought without losing context. He relies heavily on the dashboard for a quick overview, the sidebar for instant section switching, and the related trials panels on formula and protocol pages to keep track of connections.</p>
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-800 dark:text-gray-200">12. Fatima Al-Rashidi — Kosher/Halal Compliance Consultant</h3>
+            <p>Fatima audits food products for religious dietary compliance. She uses the ingredient library to flag potential non-compliant ingredients (e.g., gelatin sources, alcohol-based extracts), then traces them through every formula that uses them. The ingredient contribution heatmap helps her quickly spot which formulas contain concerning components, and the protocol steps let her verify that manufacturing processes don&apos;t introduce cross-contamination risks.</p>
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-800 dark:text-gray-200">13. Liam O&apos;Connor — Craft Brewery Owner</h3>
+            <p>Liam reverse-engineers competitor craft beers to develop his own signature brews. He defines target beers by their flavor profiles and estimated malt/hop/yeast ratios, then designs brewing protocols with precise temperature ramps and fermentation schedules. He runs multiple small-batch trials, scoring each on bitterness, body, aroma, and clarity, then uses the analysis radar charts to compare batches and the progression charts to track how his recipes improve over brewing iterations.</p>
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-800 dark:text-gray-200">14. Nina Petrov — Allergen Safety Manager</h3>
+            <p>Nina manages allergen safety across a multi-product facility. She creates separate projects for each product line, using the target composition to define allergen-free specifications. She meticulously documents every ingredient&apos;s allergen status in the notes field, builds formulas that avoid the &quot;Big 9&quot; allergens, and uses the compliance check to verify that no formula exceeds safe thresholds. The JSON export feature lets her archive validated formulations for regulatory submissions.</p>
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-800 dark:text-gray-200">15. Chen Wei — Pet Food Formulator</h3>
+            <p>Wei develops premium pet food at a startup. He reverse-engineers competitor products by analyzing guaranteed analysis panels (protein, fat, fiber, moisture) as his target composition. He builds ingredient libraries of animal proteins, grains, and supplements, then uses the solver to find optimal blends that meet AAFCO nutritional standards. The sensitivity analysis helps him understand how swapping chicken meal for fish meal affects the overall nutritional profile.</p>
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-800 dark:text-gray-200">16. Isabelle Dubois — Pastry Competition Coach</h3>
+            <p>Isabelle coaches a team preparing for international pastry competitions. She uses the tool to systematically perfect each component of complex desserts—ganache fillings, mousse layers, sponge bases, and glaze coatings. Each component gets its own formula, and she creates protocols for assembly sequences with precise timing and temperatures. The scoring profiles are customized for competition criteria: visual presentation, texture, flavor balance, and technical execution. She exports completed projects as reference archives for future competition teams.</p>
+          </div>
         </CardContent>
       </Card>
     </div>
