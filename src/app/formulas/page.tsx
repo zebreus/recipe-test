@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useStore } from "@/lib/store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,8 @@ import {
   GitBranch,
 } from "lucide-react";
 import { generateId } from "@/lib/utils";
+import { PageHeader } from "@/components/page-header";
+import { EmptyState } from "@/components/empty-state";
 import type { Formula } from "@/lib/types";
 import {
   calculateFormulaComponents,
@@ -185,22 +187,25 @@ export default function FormulasPage() {
   }
 
   // Comparison chart data
-  const comparisonData =
-    data.formulas.length > 0
-      ? COMPONENT_KEYS.map((key) => {
-          const row: Record<string, number | string> = {
-            name: COMPONENT_LABELS[key],
-            Target: data.targetProduct.targetComposition[key],
-          };
-          data.formulas.forEach((f) => {
-            const pct = componentsToPercent(
-              calculateFormulaComponents(f.ingredientLines, data.ingredients)
-            );
-            row[f.name] = pct[key];
-          });
-          return row;
-        })
-      : [];
+  const comparisonData = useMemo(
+    () =>
+      data.formulas.length > 0
+        ? COMPONENT_KEYS.map((key) => {
+            const row: Record<string, number | string> = {
+              name: COMPONENT_LABELS[key],
+              Target: data.targetProduct.targetComposition[key],
+            };
+            data.formulas.forEach((f) => {
+              const pct = componentsToPercent(
+                calculateFormulaComponents(f.ingredientLines, data.ingredients)
+              );
+              row[f.name] = pct[key];
+            });
+            return row;
+          })
+        : [],
+    [data.formulas, data.targetProduct.targetComposition, data.ingredients]
+  );
 
   const CHART_COLORS = [
     "#6366f1",
@@ -213,38 +218,30 @@ export default function FormulasPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            Candidate Formulas
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {data.formulas.length} formula
-            {data.formulas.length !== 1 ? "s" : ""}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleAutoGenerate}>
-            <Sparkles className="h-4 w-4 mr-1" />
-            Auto-Generate
-          </Button>
-          <Button onClick={() => setDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" />
-            New Formula
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Candidate Formulas"
+        subtitle={`${data.formulas.length} formula${data.formulas.length !== 1 ? "s" : ""}`}
+      >
+        <Button variant="outline" onClick={handleAutoGenerate}>
+          <Sparkles className="h-4 w-4 mr-1" />
+          Auto-Generate
+        </Button>
+        <Button onClick={() => setDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-1" />
+          New Formula
+        </Button>
+      </PageHeader>
 
       {/* Formula cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {data.formulas.length === 0 ? (
           <Card className="col-span-full">
-            <CardContent className="py-12 text-center text-sm text-gray-400 dark:text-gray-500">
-              <FlaskConical className="h-8 w-8 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
-              <p>No formulas yet.</p>
-              <p className="mt-1">
-                Create one manually or auto-generate from the target composition.
-              </p>
+            <CardContent>
+              <EmptyState
+                icon={<FlaskConical className="h-8 w-8" />}
+                title="No formulas yet."
+                subtitle="Create one manually or auto-generate from the target composition."
+              />
             </CardContent>
           </Card>
         ) : (

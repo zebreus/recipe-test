@@ -25,6 +25,8 @@ import Link from "next/link";
 import { Plus, Trash2, TestTube, Copy, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { generateId, statusColor, formatDate } from "@/lib/utils";
+import { PageHeader } from "@/components/page-header";
+import { EmptyState } from "@/components/empty-state";
 import type { Trial } from "@/lib/types";
 import { calculateSimilarityScore } from "@/lib/solver";
 
@@ -115,19 +117,15 @@ export default function TrialsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Trial Log</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {data.trials.length} trial{data.trials.length !== 1 ? "s" : ""}{" "}
-            recorded
-          </p>
-        </div>
+      <PageHeader
+        title="Trial Log"
+        subtitle={`${data.trials.length} trial${data.trials.length !== 1 ? "s" : ""} recorded`}
+      >
         <Button onClick={() => setDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-1" />
           New Trial
         </Button>
-      </div>
+      </PageHeader>
 
       {/* Search & filter bar */}
       <div className="flex flex-col sm:flex-row gap-3">
@@ -156,18 +154,12 @@ export default function TrialsPage() {
 
       {filteredTrials.length === 0 ? (
         <Card>
-          <CardContent className="py-12 text-center text-sm text-gray-400 dark:text-gray-500">
-            <TestTube className="h-8 w-8 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
-            {data.trials.length === 0 ? (
-              <>
-                <p>No trials recorded yet.</p>
-                <p className="mt-1">
-                  Create a formula and protocol first, then log a trial.
-                </p>
-              </>
-            ) : (
-              <p>No trials match your filters.</p>
-            )}
+          <CardContent>
+            <EmptyState
+              icon={<TestTube className="h-8 w-8" />}
+              title={data.trials.length === 0 ? "No trials recorded yet." : "No trials match your filters."}
+              subtitle={data.trials.length === 0 ? "Create a formula and protocol first, then log a trial." : undefined}
+            />
           </CardContent>
         </Card>
       ) : (

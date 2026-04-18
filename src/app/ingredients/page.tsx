@@ -32,7 +32,9 @@ import {
   EMPTY_COMPOSITION,
 } from "@/lib/types";
 import { generateId } from "@/lib/utils";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Leaf } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
+import { EmptyState } from "@/components/empty-state";
 import {
   BarChart,
   Bar,
@@ -119,21 +121,15 @@ export default function IngredientsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            Ingredient Library
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {data.ingredients.length} ingredient
-            {data.ingredients.length !== 1 ? "s" : ""} in library
-          </p>
-        </div>
+      <PageHeader
+        title="Ingredient Library"
+        subtitle={`${data.ingredients.length} ingredient${data.ingredients.length !== 1 ? "s" : ""} in library`}
+      >
         <Button onClick={openNew}>
           <Plus className="h-4 w-4 mr-1" />
           Add Ingredient
         </Button>
-      </div>
+      </PageHeader>
 
       {/* Filters */}
       <div className="flex gap-3">
@@ -167,9 +163,11 @@ export default function IngredientsPage() {
           <Card>
             <CardContent className="pt-4">
               {filtered.length === 0 ? (
-                <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">
-                  No ingredients found. Add your first ingredient!
-                </p>
+                <EmptyState
+                  icon={<Leaf className="h-8 w-8" />}
+                  title="No ingredients found."
+                  subtitle="Add your first ingredient!"
+                />
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">

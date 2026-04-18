@@ -27,6 +27,7 @@ import {
   Cell,
 } from "recharts";
 import { Save, Plus, X } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 
 export default function TargetPage() {
   const { data, updateTarget } = useStore();
@@ -97,18 +98,15 @@ export default function TargetPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Target Product</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Define the product you are reverse-engineering
-          </p>
-        </div>
+      <PageHeader
+        title="Target Product"
+        subtitle="Define the product you are reverse-engineering"
+      >
         <Button onClick={handleSave} disabled={!dirty}>
           <Save className="h-4 w-4 mr-1" />
           Save
         </Button>
-      </div>
+      </PageHeader>
 
       <Tabs defaultValue="basics">
         <TabsList>

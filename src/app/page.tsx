@@ -1,10 +1,12 @@
 "use client";
 
+import { useMemo } from "react";
 import { useStore } from "@/lib/store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/page-header";
 import Link from "next/link";
 import {
   Target,
@@ -43,7 +45,10 @@ export default function DashboardPage() {
   const { data } = useStore();
   const { targetProduct, ingredients, formulas, protocols, trials } = data;
 
-  const rankings = rankTrials(trials, formulas, ingredients, targetProduct);
+  const rankings = useMemo(
+    () => rankTrials(trials, formulas, ingredients, targetProduct),
+    [trials, formulas, ingredients, targetProduct]
+  );
   const bestRanking = rankings[0];
   const bestTrial = bestRanking
     ? trials.find((t) => t.id === bestRanking.trialId)
@@ -52,49 +57,53 @@ export default function DashboardPage() {
     ? formulas.find((f) => f.id === bestTrial.formulaId)
     : null;
 
-  const gapData = formulas.length > 0
-    ? COMPONENT_KEYS.map((key) => {
-        const label = COMPONENT_LABELS[key];
-        const targetVal = targetProduct.targetComposition[key];
-        const bestFormulaComps = bestFormula
-          ? componentsToPercent(
-              calculateFormulaComponents(
-                bestFormula.ingredientLines,
-                ingredients
-              )
-            )
-          : null;
-        return {
-          name: label,
-          Target: targetVal,
-          Best: bestFormulaComps ? bestFormulaComps[key] : 0,
-        };
-      })
-    : [];
+  const gapData = useMemo(
+    () =>
+      formulas.length > 0
+        ? COMPONENT_KEYS.map((key) => {
+            const label = COMPONENT_LABELS[key];
+            const targetVal = targetProduct.targetComposition[key];
+            const bestFormulaComps = bestFormula
+              ? componentsToPercent(
+                  calculateFormulaComponents(
+                    bestFormula.ingredientLines,
+                    ingredients
+                  )
+                )
+              : null;
+            return {
+              name: label,
+              Target: targetVal,
+              Best: bestFormulaComps ? bestFormulaComps[key] : 0,
+            };
+          })
+        : [],
+    [formulas, targetProduct, bestFormula, ingredients]
+  );
 
-  const trialHistory = trials
-    .filter((t) => t.status === "completed")
-    .sort(
-      (a, b) =>
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    )
-    .map((t) => ({
-      name: `Run #${t.runNumber}`,
-      score: t.similarityScore || calculateSimilarityScore(t),
-    }));
+  const trialHistory = useMemo(
+    () =>
+      trials
+        .filter((t) => t.status === "completed")
+        .sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        )
+        .map((t) => ({
+          name: `Run #${t.runNumber}`,
+          score: t.similarityScore || calculateSimilarityScore(t),
+        })),
+    [trials]
+  );
 
   const hasTarget = targetProduct.name.length > 0;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-          {data.project.name}
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Recipe Reverse Engineering Dashboard
-        </p>
-      </div>
+      <PageHeader
+        title={data.project.name}
+        subtitle="Recipe Reverse Engineering Dashboard"
+      />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
