@@ -99,8 +99,8 @@ export default function TargetPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Target Product</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Target Product</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Define the product you are reverse-engineering
           </p>
         </div>
@@ -193,7 +193,7 @@ export default function TargetPage() {
                         updateComposition(key, Number(e.target.value))
                       }
                     />
-                    <span className="text-xs text-gray-400">%</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500">%</span>
                   </div>
                 ))}
                 <div className="pt-2 border-t flex justify-between text-sm">
@@ -201,10 +201,10 @@ export default function TargetPage() {
                   <span
                     className={
                       Math.abs(totalPct - 100) < 0.5
-                        ? "text-green-600 font-medium"
+                        ? "text-green-600 dark:text-green-400 font-medium"
                         : Math.abs(totalPct - 100) < 2
-                        ? "text-yellow-600 font-medium"
-                        : "text-red-600 font-medium"
+                        ? "text-yellow-600 dark:text-yellow-400 font-medium"
+                        : "text-red-600 dark:text-red-400 font-medium"
                     }
                   >
                     {totalPct.toFixed(1)}%
@@ -216,7 +216,7 @@ export default function TargetPage() {
                   </span>
                 </div>
                 {Math.abs(totalPct - 100) >= 2 && (
-                  <p className="text-xs text-red-500 mt-1">
+                  <p className="text-xs text-red-500 dark:text-red-400 mt-1">
                     Composition should sum to ~100%. Currently off by{" "}
                     {Math.abs(totalPct - 100).toFixed(1)}%.
                   </p>
@@ -277,7 +277,7 @@ export default function TargetPage() {
                             onClick={() =>
                               removeAttribute(category, idx)
                             }
-                            className="ml-0.5 hover:text-red-600"
+                            className="ml-0.5 hover:text-red-600 dark:hover:text-red-400"
                           >
                             <X className="h-3 w-3" />
                           </button>

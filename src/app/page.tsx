@@ -88,10 +88,10 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
           {data.project.name}
         </h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Recipe Reverse Engineering Dashboard
         </p>
       </div>
@@ -124,14 +124,14 @@ export default function DashboardPage() {
       </div>
 
       {!hasTarget && (
-        <Card className="border-amber-200 bg-amber-50">
+        <Card className="border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950">
           <CardContent className="pt-6 flex items-center gap-3">
             <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
             <div>
-              <p className="text-sm font-medium text-amber-800">
+              <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
                 Get started by defining your target product
               </p>
-              <p className="text-xs text-amber-600 mt-0.5">
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
                 Set up the product you want to reverse-engineer, then add
                 ingredients and build candidate formulas.
               </p>
@@ -163,19 +163,19 @@ export default function DashboardPage() {
                   </Badge>
                 </div>
                 <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs text-gray-500">
+                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                     <span>Composition Match</span>
                     <span>{bestRanking.compositionScore.toFixed(1)}%</span>
                   </div>
                   <Progress value={bestRanking.compositionScore} />
-                  <div className="flex justify-between text-xs text-gray-500">
+                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                     <span>Outcome Score</span>
                     <span>{bestRanking.outcomeScore.toFixed(1)}%</span>
                   </div>
                   <Progress value={bestRanking.outcomeScore} />
                 </div>
                 {bestFormula && (
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     Formula: {bestFormula.name}
                   </p>
                 )}
@@ -186,7 +186,7 @@ export default function DashboardPage() {
                 </Link>
               </div>
             ) : (
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-400 dark:text-gray-500">
                 No completed trials yet. Run your first experiment!
               </p>
             )}
@@ -214,7 +214,7 @@ export default function DashboardPage() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-400 dark:text-gray-500">
                 Add formulas to see composition comparison.
               </p>
             )}
@@ -240,7 +240,7 @@ export default function DashboardPage() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-gray-400 dark:text-gray-500">
                 Complete trials to see progress over time.
               </p>
             )}
@@ -298,7 +298,7 @@ export default function DashboardPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b text-left text-gray-500">
+                  <tr className="border-b text-left text-gray-500 dark:text-gray-400">
                     <th className="pb-2 font-medium">Protocol</th>
                     <th className="pb-2 font-medium">Category</th>
                     <th className="pb-2 font-medium">Steps</th>
@@ -321,7 +321,7 @@ export default function DashboardPage() {
                         <td className="py-2">
                           <Link
                             href={`/protocols/${p.id}`}
-                            className="text-indigo-600 hover:underline"
+                            className="text-indigo-600 dark:text-indigo-400 hover:underline"
                           >
                             {p.name}
                           </Link>
@@ -360,12 +360,12 @@ function StatCard({
 }) {
   return (
     <Link href={href}>
-      <Card className="hover:border-gray-300 transition-colors cursor-pointer">
+      <Card className="hover:border-gray-300 dark:hover:border-gray-600 transition-colors cursor-pointer">
         <CardContent className="pt-4 pb-4 flex items-center gap-3">
           {icon}
           <div>
-            <p className="text-xs text-gray-500">{label}</p>
-            <p className="text-lg font-semibold text-gray-900 truncate">
+            <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
+            <p className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
               {value}
             </p>
           </div>

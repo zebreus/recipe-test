@@ -121,10 +121,10 @@ export default function IngredientsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             Ingredient Library
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             {data.ingredients.length} ingredient
             {data.ingredients.length !== 1 ? "s" : ""} in library
           </p>
@@ -167,14 +167,14 @@ export default function IngredientsPage() {
           <Card>
             <CardContent className="pt-4">
               {filtered.length === 0 ? (
-                <p className="text-sm text-gray-400 text-center py-8">
+                <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-8">
                   No ingredients found. Add your first ingredient!
                 </p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b text-left text-gray-500">
+                      <tr className="border-b text-left text-gray-500 dark:text-gray-400">
                         <th className="pb-2 font-medium">Name</th>
                         <th className="pb-2 font-medium">Category</th>
                         <th className="pb-2 font-medium">Density</th>
@@ -190,8 +190,8 @@ export default function IngredientsPage() {
                       {filtered.map((ing) => (
                         <tr
                           key={ing.id}
-                          className={`border-b last:border-0 cursor-pointer hover:bg-gray-50 ${
-                            selectedId === ing.id ? "bg-indigo-50" : ""
+                          className={`border-b last:border-0 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 ${
+                            selectedId === ing.id ? "bg-indigo-50 dark:bg-indigo-950" : ""
                           }`}
                           onClick={() => setSelectedId(ing.id)}
                         >
@@ -263,27 +263,27 @@ export default function IngredientsPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-1 text-sm">
                   <p>
-                    <span className="text-gray-500">Category:</span>{" "}
+                    <span className="text-gray-500 dark:text-gray-400">Category:</span>{" "}
                     {selected.category}
                   </p>
                   <p>
-                    <span className="text-gray-500">Density:</span>{" "}
+                    <span className="text-gray-500 dark:text-gray-400">Density:</span>{" "}
                     {selected.density_g_ml} g/mL
                   </p>
                   <p>
-                    <span className="text-gray-500">Confidence:</span>{" "}
+                    <span className="text-gray-500 dark:text-gray-400">Confidence:</span>{" "}
                     {(selected.confidence * 100).toFixed(0)}%
                   </p>
                   {selected.source && (
                     <p>
-                      <span className="text-gray-500">Source:</span>{" "}
+                      <span className="text-gray-500 dark:text-gray-400">Source:</span>{" "}
                       {selected.source}
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <p className="text-xs font-medium text-gray-500 mb-2">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
                     Composition
                   </p>
                   <ResponsiveContainer width="100%" height={200}>
@@ -319,7 +319,7 @@ export default function IngredientsPage() {
 
                 {selected.notes && (
                   <div>
-                    <p className="text-xs font-medium text-gray-500">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
                       Notes
                     </p>
                     <p className="text-sm mt-1">{selected.notes}</p>
@@ -329,7 +329,7 @@ export default function IngredientsPage() {
             </Card>
           ) : (
             <Card>
-              <CardContent className="py-12 text-center text-sm text-gray-400">
+              <CardContent className="py-12 text-center text-sm text-gray-400 dark:text-gray-500">
                 Select an ingredient to view details
               </CardContent>
             </Card>
@@ -456,7 +456,7 @@ export default function IngredientsPage() {
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                   Total:{" "}
                   {COMPONENT_KEYS.reduce(
                     (s, k) => s + editing.composition[k],

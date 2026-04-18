@@ -215,10 +215,10 @@ export default function FormulasPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             Candidate Formulas
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             {data.formulas.length} formula
             {data.formulas.length !== 1 ? "s" : ""}
           </p>
@@ -239,8 +239,8 @@ export default function FormulasPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {data.formulas.length === 0 ? (
           <Card className="col-span-full">
-            <CardContent className="py-12 text-center text-sm text-gray-400">
-              <FlaskConical className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+            <CardContent className="py-12 text-center text-sm text-gray-400 dark:text-gray-500">
+              <FlaskConical className="h-8 w-8 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
               <p>No formulas yet.</p>
               <p className="mt-1">
                 Create one manually or auto-generate from the target composition.
@@ -268,11 +268,11 @@ export default function FormulasPage() {
             );
 
             return (
-              <Card key={f.id} className="hover:border-gray-300 transition-colors">
+              <Card key={f.id} className="hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <Link href={`/formulas/${f.id}`}>
-                      <CardTitle className="text-base text-indigo-600 hover:underline cursor-pointer">
+                      <CardTitle className="text-base text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer">
                         {f.name}
                       </CardTitle>
                     </Link>
@@ -280,7 +280,7 @@ export default function FormulasPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 text-gray-500"
+                        className="h-7 w-7 text-gray-500 dark:text-gray-400"
                         onClick={() => handleCreateVariations(f)}
                         title="Create Variations"
                       >
@@ -289,7 +289,7 @@ export default function FormulasPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 text-gray-500"
+                        className="h-7 w-7 text-gray-500 dark:text-gray-400"
                         onClick={() => handleDuplicate(f)}
                         title="Duplicate"
                       >
@@ -298,7 +298,7 @@ export default function FormulasPage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 text-red-500"
+                        className="h-7 w-7 text-red-500 dark:text-red-400"
                         onClick={() => handleDelete(f.id)}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -308,7 +308,7 @@ export default function FormulasPage() {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {f.description && (
-                    <p className="text-xs text-gray-500">{f.description}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{f.description}</p>
                   )}
                   <div className="flex gap-2 flex-wrap">
                     <Badge variant="secondary">
@@ -327,10 +327,10 @@ export default function FormulasPage() {
                       variant={compliance.status === "compliant" ? "default" : "outline"}
                       className={
                         compliance.status === "compliant"
-                          ? "bg-green-100 text-green-800 border-green-300"
+                          ? "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border-green-300 dark:border-green-700"
                           : compliance.status === "warning"
-                          ? "bg-yellow-100 text-yellow-800 border-yellow-300"
-                          : "bg-red-100 text-red-800 border-red-300"
+                          ? "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 border-yellow-300 dark:border-yellow-700"
+                          : "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 border-red-300 dark:border-red-700"
                       }
                     >
                       {compliance.status === "compliant"
@@ -340,7 +340,7 @@ export default function FormulasPage() {
                         : "✗ Non-compliant"}
                     </Badge>
                   </div>
-                  <div className="flex gap-2 text-xs text-gray-500">
+                  <div className="flex gap-2 text-xs text-gray-500 dark:text-gray-400">
                     <span>v{f.version}</span>
                     <span>·</span>
                     <span>
