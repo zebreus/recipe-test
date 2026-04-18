@@ -8,7 +8,7 @@ import type {
   TargetProduct,
   Formula,
 } from "./types";
-import { COMPONENT_KEYS } from "./types";
+import { COMPONENT_KEYS, COMPONENT_LABELS } from "./types";
 
 // ─── Component Reconciliation ───
 // Convert every ingredient line into component mass, sum them up
@@ -346,16 +346,12 @@ export function checkCompliance(
   formulaComposition: ComponentComposition,
   targetComposition: ComponentComposition
 ): { status: "compliant" | "warning" | "non-compliant"; maxDeviation: number; deviations: { key: string; label: string; diff: number }[] } {
-  const labels: Record<string, string> = {
-    water_pct: "Water", fat_pct: "Fat", protein_pct: "Protein", sugar_pct: "Sugar",
-    starch_pct: "Starch", salt_pct: "Salt", hydrocolloid_pct: "Hydrocolloid", other_pct: "Other",
-  };
   const deviations: { key: string; label: string; diff: number }[] = [];
   let maxDeviation = 0;
   for (const key of COMPONENT_KEYS) {
     const diff = Math.abs(formulaComposition[key] - targetComposition[key]);
     if (diff > 2) {
-      deviations.push({ key, label: labels[key] || key, diff: round2(diff) });
+      deviations.push({ key, label: COMPONENT_LABELS[key] || key, diff: round2(diff) });
     }
     if (diff > maxDeviation) maxDeviation = diff;
   }
