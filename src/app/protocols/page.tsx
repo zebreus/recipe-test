@@ -87,11 +87,11 @@ export default function ProtocolsPage() {
   function handleDelete(id: string) {
     const usedInTrials = data.trials.filter((t) => t.protocolId === id);
     const protocolName = data.protocols.find((p) => p.id === id)?.name || "this protocol";
-    let msg = `Delete "${protocolName}"?`;
     if (usedInTrials.length > 0) {
-      msg += `\n\nWarning: This protocol is referenced by ${usedInTrials.length} trial(s). Deleting it will cause those trials to have a missing protocol reference.`;
+      alert(`Cannot delete "${protocolName}" because it is referenced by ${usedInTrials.length} trial(s).\n\nDelete those trials first.`);
+      return;
     }
-    if (confirm(msg)) {
+    if (confirm(`Delete "${protocolName}"?`)) {
       deleteProtocol(id);
     }
   }
@@ -244,7 +244,7 @@ export default function ProtocolsPage() {
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCreate}>Create</Button>
+            <Button onClick={handleCreate} disabled={!newName.trim()}>Create</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

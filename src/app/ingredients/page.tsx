@@ -171,6 +171,7 @@ export default function IngredientsPage() {
   const [editing, setEditing] = useState<Ingredient | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [lastQuickAdded, setLastQuickAdded] = useState<string | null>(null);
 
   const filtered = data.ingredients.filter((ing) => {
     const matchesSearch =
@@ -227,13 +228,13 @@ export default function IngredientsPage() {
       f.ingredientLines.some((l) => l.ingredientId === id)
     );
     const ingName = data.ingredients.find((i) => i.id === id)?.name || "this ingredient";
-    let msg = `Delete "${ingName}"?`;
     if (usedInFormulas.length > 0) {
       const names = usedInFormulas.slice(0, 5).map((f) => f.name).join(", ");
       const extra = usedInFormulas.length > 5 ? ` and ${usedInFormulas.length - 5} more` : "";
-      msg += `\n\nWarning: This ingredient is used in ${usedInFormulas.length} formula(s): ${names}${extra}.\nDeleting it will cause those formulas to have missing ingredient references.`;
+      alert(`Cannot delete "${ingName}" because it is used in ${usedInFormulas.length} formula(s): ${names}${extra}.\n\nRemove it from those formulas first.`);
+      return;
     }
-    if (confirm(msg)) {
+    if (confirm(`Delete "${ingName}"?`)) {
       deleteIngredient(id);
       if (selectedId === id) setSelectedId(null);
     }
@@ -519,11 +520,12 @@ export default function IngredientsPage() {
                   <Input
                     type="number"
                     step="0.01"
+                    min="0.01"
                     value={editing.density_g_ml}
                     onChange={(e) =>
                       setEditing({
                         ...editing,
-                        density_g_ml: Number(e.target.value),
+                        density_g_ml: Math.max(0.01, Number(e.target.value)),
                       })
                     }
                   />
@@ -572,13 +574,15 @@ export default function IngredientsPage() {
                       <Input
                         type="number"
                         step="0.1"
+                        min="0"
+                        max="100"
                         value={editing.composition[key]}
                         onChange={(e) =>
                           setEditing({
                             ...editing,
                             composition: {
                               ...editing.composition,
-                              [key]: Number(e.target.value),
+                              [key]: Math.max(0, Math.min(100, Number(e.target.value))),
                             },
                           })
                         }
@@ -631,7 +635,10 @@ export default function IngredientsPage() {
       </Dialog>
 
       {/* Quick Add Dialog */}
-      <Dialog open={quickAddOpen} onOpenChange={setQuickAddOpen}>
+      <Dialog open={quickAddOpen} onOpenChange={(open) => {
+        setQuickAddOpen(open);
+        if (!open) setLastQuickAdded(null);
+      }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Quick Add Common Ingredient</DialogTitle>
@@ -640,6 +647,11 @@ export default function IngredientsPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-[60vh] overflow-y-auto space-y-1">
+            {lastQuickAdded && (
+              <div className="px-3 py-2 mb-2 rounded-md bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-sm">
+                ✓ Added &quot;{lastQuickAdded}&quot; to library
+              </div>
+            )}
             {COMMON_INGREDIENTS.map((item) => {
               const alreadyAdded = data.ingredients.some(
                 (ing) => ing.name.toLowerCase() === item.name.toLowerCase()
@@ -666,6 +678,7 @@ export default function IngredientsPage() {
                       createdAt: now,
                       updatedAt: now,
                     });
+                    setLastQuickAdded(item.name);
                   }}
                 >
                   <div className="flex items-center gap-2 min-w-0">

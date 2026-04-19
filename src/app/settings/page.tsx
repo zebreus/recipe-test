@@ -45,6 +45,7 @@ export default function SettingsPage() {
 
   function handleImport() {
     if (!importText.trim()) return;
+    if (!confirm("Importing will replace all current project data. Continue?")) return;
     const ok = importJSON(importText);
     if (ok) {
       setImportStatus("Import successful!");
@@ -61,6 +62,7 @@ export default function SettingsPage() {
     const reader = new FileReader();
     reader.onload = (ev) => {
       const text = ev.target?.result as string;
+      if (!confirm("Importing will replace all current project data. Continue?")) return;
       const ok = importJSON(text);
       if (ok) {
         setImportStatus("Import successful!");

@@ -311,7 +311,7 @@ export default function TrialsPage() {
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCreate}>Create Trial</Button>
+            <Button onClick={handleCreate} disabled={!newFormulaId || !newProtocolId}>Create Trial</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
