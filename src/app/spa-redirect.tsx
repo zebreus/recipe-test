@@ -21,7 +21,24 @@ export function SpaRedirectHandler() {
         .split("&")
         .map((s) => s.replace(/~and~/g, "&"))
         .join("?");
-      const path = "/" + decoded + hash;
+      let path = "/" + decoded + hash;
+
+      // Convert dynamic routes to query-param format for static export compatibility
+      const dynamicMatch = path.match(
+        /^\/(formulas|protocols|trials)\/([^/?#]+)\/?(?:\?([^#]*))?(#.*)?$/,
+      );
+      if (dynamicMatch) {
+        const [, resource, id, query = "", pathHash = ""] = dynamicMatch;
+        const params = new URLSearchParams();
+        params.set("id", id);
+        new URLSearchParams(query).forEach((value, key) => {
+          if (key !== "id") {
+            params.append(key, value);
+          }
+        });
+        path = `/${resource}?${params.toString()}${pathHash}`;
+      }
+
       // Clean up the URL
       window.history.replaceState(null, "", path);
       router.replace(path);
