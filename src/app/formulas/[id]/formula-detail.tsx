@@ -101,7 +101,7 @@ export default function FormulaDetailClient({ id }: { id: string }) {
     setConfirmSaveOpen(false);
   }
 
-  function handleCreateTrial() {
+  function createTrialAndNavigate(mode?: "run") {
     if (!newTrialProtocolId || !local) return;
     const now = new Date().toISOString();
     const runNumber = data.trials.filter((t) => t.formulaId === local.id).length + 1;
@@ -131,40 +131,15 @@ export default function FormulaDetailClient({ id }: { id: string }) {
     addTrial(t);
     setTrialDialogOpen(false);
     setNewTrialProtocolId("");
-    router.push(`/trials?id=${t.id}`);
+    router.push(mode === "run" ? `/trials?id=${t.id}&mode=run` : `/trials?id=${t.id}`);
+  }
+
+  function handleCreateTrial() {
+    createTrialAndNavigate();
   }
 
   function handleCreateAndRunTrial() {
-    if (!newTrialProtocolId || !local) return;
-    const now = new Date().toISOString();
-    const runNumber = data.trials.filter((t) => t.formulaId === local.id).length + 1;
-    const t: Trial = {
-      id: generateId(),
-      formulaId: local.id,
-      protocolId: newTrialProtocolId,
-      runNumber,
-      status: "planned",
-      actualParameters: {},
-      observations: [],
-      measurements: [],
-      scores: data.scoringProfiles[0]?.dimensions.map((d) => ({
-        name: d.name,
-        score: 0,
-        weight: d.weight,
-        notes: "",
-      })) || [],
-      similarityScore: 0,
-      attachmentIds: [],
-      notes: "",
-      startedAt: "",
-      completedAt: "",
-      createdAt: now,
-      updatedAt: now,
-    };
-    addTrial(t);
-    setTrialDialogOpen(false);
-    setNewTrialProtocolId("");
-    router.push(`/trials?id=${t.id}&mode=run`);
+    createTrialAndNavigate("run");
   }
 
   function update(partial: Partial<Formula>) {
