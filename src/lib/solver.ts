@@ -83,7 +83,7 @@ export function calculateMassBalance(
     totalInputG: round2(totalInput),
     totalOutputG: targetMassG,
     lossG: round2(lossG),
-    lossPct: round2((lossG / totalInput) * 100),
+    lossPct: totalInput > 0 ? round2((lossG / totalInput) * 100) : 0,
     waterAdjustmentG: round2(-lossG),
   };
 }
