@@ -375,30 +375,68 @@ export default function ProtocolDetailClient({ id }: { id: string }) {
                     </Select>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">Addition</Label>
+                    <Label className="text-xs">Additions</Label>
+                    {step.additionIngredients.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-1">
+                        {step.additionIngredients.map((ingId) => {
+                          const ing = data.ingredients.find((i) => i.id === ingId);
+                          return (
+                            <span
+                              key={ingId}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-xs"
+                            >
+                              {ing?.name || ingId}
+                              <button
+                                type="button"
+                                className="hover:text-red-500 dark:hover:text-red-400"
+                                onClick={() =>
+                                  updateStep(idx, {
+                                    additionIngredients:
+                                      step.additionIngredients.filter(
+                                        (id) => id !== ingId
+                                      ),
+                                  })
+                                }
+                              >
+                                ×
+                              </button>
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
                     <Select
-                      value={
-                        step.additionIngredients.length > 0
-                          ? step.additionIngredients[0]
-                          : "__none__"
-                      }
-                      onValueChange={(v) =>
+                      value="__none__"
+                      onValueChange={(v) => {
+                        if (v === "__none__") return;
+                        if (step.additionIngredients.includes(v)) return;
                         updateStep(idx, {
-                          additionIngredients:
-                            v === "__none__" ? [] : [v],
-                        })
-                      }
+                          additionIngredients: [
+                            ...step.additionIngredients,
+                            v,
+                          ],
+                        });
+                      }}
                     >
                       <SelectTrigger className="h-8">
-                        <SelectValue placeholder="None" />
+                        <SelectValue placeholder="Add ingredient…" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="__none__">None</SelectItem>
-                        {data.ingredients.map((ing) => (
-                          <SelectItem key={ing.id} value={ing.id}>
-                            {ing.name}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="__none__">
+                          {step.additionIngredients.length === 0
+                            ? "None"
+                            : "Add another…"}
+                        </SelectItem>
+                        {data.ingredients
+                          .filter(
+                            (ing) =>
+                              !step.additionIngredients.includes(ing.id)
+                          )
+                          .map((ing) => (
+                            <SelectItem key={ing.id} value={ing.id}>
+                              {ing.name}
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                   </div>

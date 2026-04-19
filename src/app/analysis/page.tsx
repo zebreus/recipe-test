@@ -281,10 +281,24 @@ export default function AnalysisPage() {
                             </Link>
                           </td>
                           <td className="py-2">
-                            {row.formula?.name || "—"}
+                            {row.formula ? (
+                              <Link
+                                href={`/formulas/${row.formula.id}`}
+                                className="text-indigo-600 dark:text-indigo-400 hover:underline"
+                              >
+                                {row.formula.name}
+                              </Link>
+                            ) : "—"}
                           </td>
                           <td className="py-2">
-                            {row.protocol?.name || "—"}
+                            {row.protocol ? (
+                              <Link
+                                href={`/protocols/${row.protocol.id}`}
+                                className="text-indigo-600 dark:text-indigo-400 hover:underline"
+                              >
+                                {row.protocol.name}
+                              </Link>
+                            ) : "—"}
                           </td>
                           <td className="py-2">
                             {row.compositionScore.toFixed(1)}%
@@ -364,7 +378,11 @@ export default function AnalysisPage() {
                         <th className="pb-2 font-medium">Component</th>
                         <th className="pb-2 font-medium">Target</th>
                         {formulas.map((f) => (
-                          <th key={f.id} className="pb-2 font-medium">{f.name}</th>
+                          <th key={f.id} className="pb-2 font-medium">
+                            <Link href={`/formulas/${f.id}`} className="text-indigo-600 dark:text-indigo-400 hover:underline">
+                              {f.name}
+                            </Link>
+                          </th>
                         ))}
                       </tr>
                     </thead>
@@ -440,7 +458,7 @@ export default function AnalysisPage() {
                     return (
                       <div key={f.id} className="border rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium">{f.name}</span>
+                          <Link href={`/formulas/${f.id}`} className="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">{f.name}</Link>
                           <span
                             className={`text-xs px-2 py-1 rounded-full font-medium ${
                               compliance.status === "compliant"
