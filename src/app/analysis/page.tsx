@@ -115,7 +115,7 @@ export default function AnalysisPage() {
     };
     selectedRadarTrials.forEach((t) => {
       const score = t?.scores.find((s) => s.name === dim)?.score || 0;
-      row[`Trial #${t?.runNumber}`] = score;
+      row[t.id] = score;
     });
     return row;
   });
@@ -585,9 +585,11 @@ export default function AnalysisPage() {
                       return (
                         <button
                           key={t.id}
+                          aria-pressed={isSelected}
                           onClick={() => {
                             setRadarTrialIds((prev) => {
-                              if (isSelected) return prev.filter((id) => id !== t.id);
+                              const wasSelected = prev.includes(t.id);
+                              if (wasSelected) return prev.filter((id) => id !== t.id);
                               if (prev.length >= 6) return prev;
                               return [...prev, t.id];
                             });
@@ -632,7 +634,7 @@ export default function AnalysisPage() {
                         <Radar
                           key={t.id}
                           name={`Trial #${t.runNumber}`}
-                          dataKey={`Trial #${t.runNumber}`}
+                          dataKey={t.id}
                           stroke={color}
                           fill={color}
                           fillOpacity={0.15}

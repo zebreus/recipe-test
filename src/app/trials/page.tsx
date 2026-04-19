@@ -121,9 +121,9 @@ export default function TrialsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Trial Log"
-        subtitle={filteredTrials.length === data.trials.length
-          ? `${data.trials.length} trial${data.trials.length !== 1 ? "s" : ""} recorded`
-          : `${filteredTrials.length} of ${data.trials.length} trial${data.trials.length !== 1 ? "s" : ""}`}
+        subtitle={statusFilter !== "all" || protocolFilter !== "all" || searchQuery.trim()
+          ? `${filteredTrials.length} of ${data.trials.length} trial${data.trials.length !== 1 ? "s" : ""}`
+          : `${data.trials.length} trial${data.trials.length !== 1 ? "s" : ""} recorded`}
       >
         <Button onClick={() => {
           setNewFormulaId("");
