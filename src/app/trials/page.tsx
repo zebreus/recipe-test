@@ -121,7 +121,9 @@ export default function TrialsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Trial Log"
-        subtitle={`${data.trials.length} trial${data.trials.length !== 1 ? "s" : ""} recorded`}
+        subtitle={filteredTrials.length === data.trials.length
+          ? `${data.trials.length} trial${data.trials.length !== 1 ? "s" : ""} recorded`
+          : `${filteredTrials.length} of ${data.trials.length} trial${data.trials.length !== 1 ? "s" : ""}`}
       >
         <Button onClick={() => {
           setNewFormulaId("");
