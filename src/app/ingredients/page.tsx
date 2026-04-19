@@ -211,7 +211,8 @@ export default function IngredientsPage() {
 
   function handleSave() {
     if (!editing) return;
-    const updated = { ...editing, updatedAt: new Date().toISOString() };
+    if (!editing.name.trim()) return;
+    const updated = { ...editing, name: editing.name.trim(), updatedAt: new Date().toISOString() };
     if (data.ingredients.find((i) => i.id === updated.id)) {
       updateIngredient(updated);
     } else {
@@ -222,7 +223,15 @@ export default function IngredientsPage() {
   }
 
   function handleDelete(id: string) {
-    if (confirm("Delete this ingredient?")) {
+    const usedInFormulas = data.formulas.filter((f) =>
+      f.ingredientLines.some((l) => l.ingredientId === id)
+    );
+    const ingName = data.ingredients.find((i) => i.id === id)?.name || "this ingredient";
+    let msg = `Delete "${ingName}"?`;
+    if (usedInFormulas.length > 0) {
+      msg += `\n\nWarning: This ingredient is used in ${usedInFormulas.length} formula(s): ${usedInFormulas.map((f) => f.name).join(", ")}.\nDeleting it will cause those formulas to have missing ingredient references.`;
+    }
+    if (confirm(msg)) {
       deleteIngredient(id);
       if (selectedId === id) setSelectedId(null);
     }

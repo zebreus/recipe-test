@@ -131,7 +131,13 @@ export default function FormulasPage() {
   }
 
   function handleDelete(id: string) {
-    if (confirm("Delete this formula?")) {
+    const usedInTrials = data.trials.filter((t) => t.formulaId === id);
+    const formulaName = data.formulas.find((f) => f.id === id)?.name || "this formula";
+    let msg = `Delete "${formulaName}"?`;
+    if (usedInTrials.length > 0) {
+      msg += `\n\nWarning: This formula is referenced by ${usedInTrials.length} trial(s). Deleting it will cause those trials to have a missing formula reference.`;
+    }
+    if (confirm(msg)) {
       deleteFormula(id);
     }
   }

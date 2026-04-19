@@ -137,6 +137,9 @@ export default function TrialDetailClient({ id }: { id: string }) {
 
   // ─── Scores ───
   function updateScore(idx: number, partial: Partial<ScoringDimension>) {
+    if (partial.score !== undefined) {
+      partial.score = Math.max(0, Math.min(10, partial.score));
+    }
     const scores = local!.scores.map((s, i) =>
       i === idx ? { ...s, ...partial } : s
     );
@@ -360,6 +363,9 @@ export default function TrialDetailClient({ id }: { id: string }) {
                         })
                       }
                     />
+                    <span className="text-[10px] text-gray-400 dark:text-gray-500 whitespace-nowrap self-center">
+                      {new Date(obs.timestamp).toLocaleString()}
+                    </span>
                     <Button
                       variant="ghost"
                       size="icon"

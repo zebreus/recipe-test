@@ -38,7 +38,9 @@ export default function SettingsPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "project.json";
+    const safeName = data.project.name.replace(/[^a-z0-9]/gi, "-").toLowerCase();
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, "-");
+    a.download = `${safeName}-${timestamp}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -51,7 +53,19 @@ export default function SettingsPage() {
       setImportText("");
       setProjectName(data.project.name);
     } else {
-      setImportStatus("Import failed. Invalid JSON or missing fields.");
+      let errorDetail = "Import failed.";
+      try {
+        const parsed = JSON.parse(importText);
+        if (!parsed.project) errorDetail += " Missing 'project' field.";
+        if (!parsed.ingredients) errorDetail += " Missing 'ingredients' field.";
+        if (!parsed.formulas) errorDetail += " Missing 'formulas' field.";
+        if (!parsed.protocols) errorDetail += " Missing 'protocols' field.";
+        if (!parsed.trials) errorDetail += " Missing 'trials' field.";
+        if (!parsed.targetProduct) errorDetail += " Missing 'targetProduct' field.";
+      } catch {
+        errorDetail += " The input is not valid JSON.";
+      }
+      setImportStatus(errorDetail);
     }
   }
 
@@ -66,7 +80,15 @@ export default function SettingsPage() {
         setImportStatus("Import successful!");
         setProjectName(data.project.name);
       } else {
-        setImportStatus("Import failed. Invalid JSON or missing fields.");
+        let errorDetail = "Import failed.";
+        try {
+          const parsed = JSON.parse(text);
+          if (!parsed.project) errorDetail += " Missing 'project' field.";
+          if (!parsed.ingredients) errorDetail += " Missing 'ingredients' field.";
+        } catch {
+          errorDetail += " The file does not contain valid JSON.";
+        }
+        setImportStatus(errorDetail);
       }
     };
     reader.readAsText(file);

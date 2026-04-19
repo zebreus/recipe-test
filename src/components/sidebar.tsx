@@ -45,7 +45,7 @@ export function Sidebar({
 }) {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
-  const { exportJSON, importJSON } = useStore();
+  const { data, exportJSON, importJSON } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleExport() {
@@ -54,7 +54,9 @@ export function Sidebar({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "project.json";
+    const safeName = data.project.name.replace(/[^a-z0-9]/gi, "-").toLowerCase();
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/[T:]/g, "-");
+    a.download = `${safeName}-${timestamp}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -67,13 +69,24 @@ export function Sidebar({
       const text = ev.target?.result as string;
       const ok = importJSON(text);
       if (ok) {
-        alert("Import successful!");
+        alert("Import successful! Project data has been loaded.");
       } else {
-        alert("Import failed. Invalid JSON or missing fields.");
+        let errorDetail = "Import failed.";
+        try {
+          const parsed = JSON.parse(text);
+          if (!parsed.project) errorDetail += " Missing 'project' field.";
+          if (!parsed.ingredients) errorDetail += " Missing 'ingredients' field.";
+          if (!parsed.formulas) errorDetail += " Missing 'formulas' field.";
+          if (!parsed.protocols) errorDetail += " Missing 'protocols' field.";
+          if (!parsed.trials) errorDetail += " Missing 'trials' field.";
+          if (!parsed.targetProduct) errorDetail += " Missing 'targetProduct' field.";
+        } catch {
+          errorDetail += " The file does not contain valid JSON.";
+        }
+        alert(errorDetail);
       }
     };
     reader.readAsText(file);
-    // Reset input so the same file can be re-imported
     e.target.value = "";
   }
 

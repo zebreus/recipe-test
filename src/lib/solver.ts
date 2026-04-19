@@ -134,16 +134,17 @@ export function compositionSimilarity(
   a: ComponentComposition,
   b: ComponentComposition
 ): number {
-  let totalError = 0;
+  let weightedError = 0;
   let totalWeight = 0;
   for (const key of COMPONENT_KEYS) {
     const diff = Math.abs(a[key] - b[key]);
-    // Weight by magnitude to avoid tiny components dominating
-    const weight = Math.max(a[key], b[key], 1);
-    totalError += (diff / weight) * weight;
+    // Weight by magnitude so large components (water 62%) matter more than trace ones (salt 0.15%)
+    const weight = Math.max(a[key], b[key], 0.1);
+    weightedError += diff * weight;
     totalWeight += weight;
   }
-  const normalizedError = totalWeight > 0 ? totalError / totalWeight : 0;
+  if (totalWeight === 0) return 100;
+  const normalizedError = weightedError / totalWeight;
   return round2(Math.max(0, 100 - normalizedError * 10));
 }
 
