@@ -497,46 +497,55 @@ export default function TrialDetailClient({ id }: { id: string }) {
                       Enter a name for the new parameter (e.g. &quot;Actual Temp&quot;, &quot;pH&quot;).
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-2">
-                    <Label>Parameter Name</Label>
-                    <Input
-                      value={newParamName}
-                      onChange={(e) => setNewParamName(e.target.value)}
-                      placeholder="e.g. Actual Temperature"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && newParamName.trim()) {
-                          update({
-                            actualParameters: {
-                              ...local!.actualParameters,
-                              [newParamName.trim()]: "",
-                            },
-                          });
-                          setParamDialogOpen(false);
-                        }
-                      }}
-                    />
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setParamDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        if (newParamName.trim()) {
-                          update({
-                            actualParameters: {
-                              ...local!.actualParameters,
-                              [newParamName.trim()]: "",
-                            },
-                          });
-                          setParamDialogOpen(false);
-                        }
-                      }}
-                      disabled={!newParamName.trim()}
-                    >
-                      Add
-                    </Button>
-                  </DialogFooter>
+                  {(() => {
+                    const trimmed = newParamName.trim();
+                    const isDuplicate =
+                      trimmed !== "" &&
+                      Object.keys(local!.actualParameters).some(
+                        (k) => k.toLowerCase() === trimmed.toLowerCase()
+                      );
+                    const canAdd = trimmed !== "" && !isDuplicate;
+
+                    const addParam = () => {
+                      if (!canAdd) return;
+                      update({
+                        actualParameters: {
+                          ...local!.actualParameters,
+                          [trimmed]: "",
+                        },
+                      });
+                      setParamDialogOpen(false);
+                    };
+
+                    return (
+                      <>
+                        <div className="space-y-2">
+                          <Label>Parameter Name</Label>
+                          <Input
+                            value={newParamName}
+                            onChange={(e) => setNewParamName(e.target.value)}
+                            placeholder="e.g. Actual Temperature"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") addParam();
+                            }}
+                          />
+                          {isDuplicate && (
+                            <p className="text-xs text-red-500 dark:text-red-400">
+                              A parameter named &quot;{trimmed}&quot; already exists.
+                            </p>
+                          )}
+                        </div>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setParamDialogOpen(false)}>
+                            Cancel
+                          </Button>
+                          <Button onClick={addParam} disabled={!canAdd}>
+                            Add
+                          </Button>
+                        </DialogFooter>
+                      </>
+                    );
+                  })()}
                 </DialogContent>
               </Dialog>
             </CardContent>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useStore } from "@/lib/store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,14 @@ import {
 
 export default function ProtocolDetailClient({ id }: { id: string }) {
   const { data, updateProtocol } = useStore();
+
+  const ingredientById = useMemo(() => {
+    const map = new Map<string, (typeof data.ingredients)[number]>();
+    for (const ing of data.ingredients) {
+      map.set(ing.id, ing);
+    }
+    return map;
+  }, [data.ingredients]);
 
   const protocol = data.protocols.find((p) => p.id === id);
   const [local, setLocal] = useState<Protocol | null>(
@@ -379,15 +387,17 @@ export default function ProtocolDetailClient({ id }: { id: string }) {
                     {step.additionIngredients.length > 0 && (
                       <div className="flex flex-wrap gap-1 mb-1">
                         {step.additionIngredients.map((ingId) => {
-                          const ing = data.ingredients.find((i) => i.id === ingId);
+                          const ing = ingredientById.get(ingId);
+                          const ingName = ing?.name || ingId;
                           return (
                             <span
                               key={ingId}
                               className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 text-xs"
                             >
-                              {ing?.name || ingId}
+                              {ingName}
                               <button
                                 type="button"
+                                aria-label={`Remove ${ingName}`}
                                 className="hover:text-red-500 dark:hover:text-red-400"
                                 onClick={() =>
                                   updateStep(idx, {

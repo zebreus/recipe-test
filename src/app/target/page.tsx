@@ -35,7 +35,7 @@ export default function TargetPage() {
   const [dirty, setDirty] = useState(false);
 
   const [newAttrValues, setNewAttrValues] = useState<
-    Record<string, string>
+    Record<keyof TargetProduct["observedAttributes"], string>
   >({ texture: "", flavor: "", color: "", packaging: "" });
 
   function handleSave() {
@@ -71,7 +71,7 @@ export default function TargetPage() {
     attrs[category] = [...attrs[category], value.trim()];
     setTarget({ ...target, observedAttributes: attrs });
     setDirty(true);
-    setNewAttrValues({ ...newAttrValues, [category]: "" });
+    setNewAttrValues(prev => ({ ...prev, [category]: "" }));
   }
 
   function removeAttribute(
@@ -292,7 +292,7 @@ export default function TargetPage() {
                       className="max-w-xs"
                       value={newAttrValues[category] || ""}
                       onChange={(e) =>
-                        setNewAttrValues({ ...newAttrValues, [category]: e.target.value })
+                        setNewAttrValues(prev => ({ ...prev, [category]: e.target.value }))
                       }
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
