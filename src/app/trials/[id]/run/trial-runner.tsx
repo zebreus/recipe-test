@@ -553,7 +553,7 @@ export default function TrialRunnerClient({ id }: { id: string }) {
                       {isStarted &&
                         step.durationMin !== null &&
                         timerSecondsLeft !== null && (() => {
-                          const totalSeconds = step.durationMin! * 60;
+                          const totalSeconds = step.durationMin * 60;
                           return (
                           <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-3">
                             <div className="text-center">
@@ -649,7 +649,7 @@ export default function TrialRunnerClient({ id }: { id: string }) {
                               }}
                               className="bg-green-600 hover:bg-green-700 text-white"
                             >
-                              <CheckCircle2 className="h-4 w-4 mr-1" />{" "}
+                              <CheckCircle2 className="h-4 w-4 mr-1" />
                               Complete
                             </Button>
                           )}
