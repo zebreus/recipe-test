@@ -15,7 +15,7 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import { generateId } from "@/lib/utils";
+import { generateId, exportFilename, describeImportError } from "@/lib/utils";
 import type { ScoringProfile } from "@/lib/types";
 
 export default function SettingsPage() {
@@ -38,7 +38,7 @@ export default function SettingsPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "project.json";
+    a.download = exportFilename(data.project.name);
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -51,7 +51,7 @@ export default function SettingsPage() {
       setImportText("");
       setProjectName(data.project.name);
     } else {
-      setImportStatus("Import failed. Invalid JSON or missing fields.");
+      setImportStatus(describeImportError(importText) ?? "Import failed.");
     }
   }
 
@@ -66,7 +66,7 @@ export default function SettingsPage() {
         setImportStatus("Import successful!");
         setProjectName(data.project.name);
       } else {
-        setImportStatus("Import failed. Invalid JSON or missing fields.");
+        setImportStatus(describeImportError(text) ?? "Import failed.");
       }
     };
     reader.readAsText(file);

@@ -95,6 +95,9 @@ export default function FormulaDetailClient({ id }: { id: string }) {
   }
 
   function updateLine(index: number, partial: Partial<FormulaLine>) {
+    if (partial.massG !== undefined) {
+      partial.massG = Math.max(0, partial.massG);
+    }
     const lines = local!.ingredientLines.map((l, i) =>
       i === index ? { ...l, ...partial } : l
     );

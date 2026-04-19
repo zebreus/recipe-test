@@ -85,7 +85,13 @@ export default function ProtocolsPage() {
   }
 
   function handleDelete(id: string) {
-    if (confirm("Delete this protocol?")) {
+    const usedInTrials = data.trials.filter((t) => t.protocolId === id);
+    const protocolName = data.protocols.find((p) => p.id === id)?.name || "this protocol";
+    let msg = `Delete "${protocolName}"?`;
+    if (usedInTrials.length > 0) {
+      msg += `\n\nWarning: This protocol is referenced by ${usedInTrials.length} trial(s). Deleting it will cause those trials to have a missing protocol reference.`;
+    }
+    if (confirm(msg)) {
       deleteProtocol(id);
     }
   }

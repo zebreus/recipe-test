@@ -83,7 +83,7 @@ export function calculateMassBalance(
     totalInputG: round2(totalInput),
     totalOutputG: targetMassG,
     lossG: round2(lossG),
-    lossPct: round2((lossG / totalInput) * 100),
+    lossPct: totalInput > 0 ? round2((lossG / totalInput) * 100) : 0,
     waterAdjustmentG: round2(-lossG),
   };
 }
@@ -134,16 +134,18 @@ export function compositionSimilarity(
   a: ComponentComposition,
   b: ComponentComposition
 ): number {
-  let totalError = 0;
+  let weightedError = 0;
   let totalWeight = 0;
   for (const key of COMPONENT_KEYS) {
     const diff = Math.abs(a[key] - b[key]);
-    // Weight by magnitude to avoid tiny components dominating
-    const weight = Math.max(a[key], b[key], 1);
-    totalError += (diff / weight) * weight;
+    // Floor at 0.1 so trace components (e.g. salt at 0%) still get a small
+    // but nonzero weight in the weighted error sum
+    const weight = Math.max(a[key], b[key], 0.1);
+    weightedError += diff * weight;
     totalWeight += weight;
   }
-  const normalizedError = totalWeight > 0 ? totalError / totalWeight : 0;
+  if (totalWeight === 0) return 100;
+  const normalizedError = weightedError / totalWeight;
   return round2(Math.max(0, 100 - normalizedError * 10));
 }
 

@@ -18,7 +18,7 @@ import {
   Download,
   Upload,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, exportFilename, describeImportError } from "@/lib/utils";
 import { useTheme } from "@/lib/theme";
 import { useStore } from "@/lib/store";
 import { useRef } from "react";
@@ -45,7 +45,7 @@ export function Sidebar({
 }) {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
-  const { exportJSON, importJSON } = useStore();
+  const { data, exportJSON, importJSON } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleExport() {
@@ -54,7 +54,7 @@ export function Sidebar({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "project.json";
+    a.download = exportFilename(data.project.name);
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -67,13 +67,12 @@ export function Sidebar({
       const text = ev.target?.result as string;
       const ok = importJSON(text);
       if (ok) {
-        alert("Import successful!");
+        alert("Import successful! Project data has been loaded.");
       } else {
-        alert("Import failed. Invalid JSON or missing fields.");
+        alert(describeImportError(text) ?? "Import failed.");
       }
     };
     reader.readAsText(file);
-    // Reset input so the same file can be re-imported
     e.target.value = "";
   }
 
