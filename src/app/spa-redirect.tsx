@@ -40,7 +40,7 @@ export function SpaRedirectHandler() {
         path = `/trials?${params.toString()}${pathHash}`;
       }
 
-      // Convert /formulas/[id], /protocols/[id], /trials/[id] to query-param format
+      // Convert dynamic routes to query-param format for static export compatibility
       const dynamicMatch = path.match(
         /^\/(formulas|protocols|trials)\/([^/?#]+)\/?(?:\?([^#]*))?(#.*)?$/,
       );

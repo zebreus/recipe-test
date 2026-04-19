@@ -31,7 +31,7 @@ import { EmptyState } from "@/components/empty-state";
 import type { Trial } from "@/lib/types";
 import { calculateSimilarityScore } from "@/lib/solver";
 import TrialDetailClient from "./[id]/trial-detail";
-import TrialRunnerClient from "./[id]/run/trial-runner";
+import TrialRunnerClient from "./trial-runner";
 
 const STATUS_OPTIONS = ["all", "planned", "in-progress", "completed", "failed", "abandoned"] as const;
 
@@ -51,6 +51,7 @@ function TrialsRouter() {
   if (detailId && mode === "run") {
     return <TrialRunnerClient id={detailId} />;
   }
+
   if (detailId) {
     return <TrialDetailClient id={detailId} />;
   }
