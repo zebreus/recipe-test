@@ -39,6 +39,7 @@ export default function TrialsPage() {
   const [newProtocolId, setNewProtocolId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [protocolFilter, setProtocolFilter] = useState<string>("all");
 
   function handleCreate() {
     if (!newFormulaId || !newProtocolId) return;
@@ -103,6 +104,7 @@ export default function TrialsPage() {
 
   const filteredTrials = sortedTrials.filter((trial) => {
     if (statusFilter !== "all" && trial.status !== statusFilter) return false;
+    if (protocolFilter !== "all" && trial.protocolId !== protocolFilter) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const formula = data.formulas.find((f) => f.id === trial.formulaId);
@@ -150,6 +152,19 @@ export default function TrialsPage() {
             {STATUS_OPTIONS.map((s) => (
               <SelectItem key={s} value={s}>
                 {s === "all" ? "All statuses" : s.charAt(0).toUpperCase() + s.slice(1)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={protocolFilter} onValueChange={setProtocolFilter}>
+          <SelectTrigger className="w-full sm:w-52">
+            <SelectValue placeholder="All protocols" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All protocols</SelectItem>
+            {data.protocols.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.name}
               </SelectItem>
             ))}
           </SelectContent>
