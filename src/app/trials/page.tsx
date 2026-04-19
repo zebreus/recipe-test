@@ -30,7 +30,7 @@ import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import type { Trial } from "@/lib/types";
 import { calculateSimilarityScore } from "@/lib/solver";
-import TrialDetailClient from "./[id]/trial-detail";
+import TrialDetailClient from "./trial-detail";
 import TrialRunnerClient from "./trial-runner";
 
 const STATUS_OPTIONS = ["all", "planned", "in-progress", "completed", "failed", "abandoned"] as const;
