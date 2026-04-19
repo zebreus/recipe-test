@@ -336,12 +336,13 @@ export default function ProtocolDetailClient({ id }: { id: string }) {
                     <Label className="text-xs">Duration (min)</Label>
                     <Input
                       type="number"
+                      min="0"
                       className="h-8"
                       value={step.durationMin ?? ""}
                       onChange={(e) =>
                         updateStep(idx, {
                           durationMin: e.target.value
-                            ? Number(e.target.value)
+                            ? Math.max(0, Number(e.target.value))
                             : null,
                         })
                       }

@@ -131,9 +131,10 @@ export default function TargetPage() {
                   <Label>Target Mass (g)</Label>
                   <Input
                     type="number"
+                    min="0"
                     value={target.targetMassG}
                     onChange={(e) =>
-                      updateField("targetMassG", Number(e.target.value))
+                      updateField("targetMassG", Math.max(0, Number(e.target.value)))
                     }
                   />
                 </div>
@@ -141,9 +142,10 @@ export default function TargetPage() {
                   <Label>Target Volume (mL)</Label>
                   <Input
                     type="number"
+                    min="0"
                     value={target.targetVolumeMl}
                     onChange={(e) =>
-                      updateField("targetVolumeMl", Number(e.target.value))
+                      updateField("targetVolumeMl", Math.max(0, Number(e.target.value)))
                     }
                   />
                 </div>
@@ -185,10 +187,12 @@ export default function TargetPage() {
                     <Input
                       type="number"
                       step="0.1"
+                      min="0"
+                      max="100"
                       className="w-24"
                       value={target.targetComposition[key]}
                       onChange={(e) =>
-                        updateComposition(key, Number(e.target.value))
+                        updateComposition(key, Math.max(0, Math.min(100, Number(e.target.value))))
                       }
                     />
                     <span className="text-xs text-gray-400 dark:text-gray-500">%</span>

@@ -57,6 +57,7 @@ export default function FormulasPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [newDesc, setNewDesc] = useState("");
+  const [feedbackMsg, setFeedbackMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   function handleCreate() {
     if (!newName.trim()) return;
@@ -99,9 +100,10 @@ export default function FormulasPage() {
 
   function handleAutoGenerate() {
     if (data.ingredients.length === 0) {
-      alert("Add ingredients first!");
+      setFeedbackMsg({ type: "error", text: "Add ingredients first before auto-generating a formula." });
       return;
     }
+    setFeedbackMsg(null);
     const lines = solveFormula(
       data.targetProduct.targetMassG,
       data.targetProduct.targetComposition,
@@ -133,11 +135,11 @@ export default function FormulasPage() {
   function handleDelete(id: string) {
     const usedInTrials = data.trials.filter((t) => t.formulaId === id);
     const formulaName = data.formulas.find((f) => f.id === id)?.name || "this formula";
-    let msg = `Delete "${formulaName}"?`;
     if (usedInTrials.length > 0) {
-      msg += `\n\nWarning: This formula is referenced by ${usedInTrials.length} trial(s). Deleting it will cause those trials to have a missing formula reference.`;
+      alert(`Cannot delete "${formulaName}" because it is referenced by ${usedInTrials.length} trial(s).\n\nDelete those trials first.`);
+      return;
     }
-    if (confirm(msg)) {
+    if (confirm(`Delete "${formulaName}"?`)) {
       deleteFormula(id);
     }
   }
@@ -157,9 +159,10 @@ export default function FormulasPage() {
 
   function handleCreateVariations(f: Formula) {
     if (f.ingredientLines.length === 0) {
-      alert("Formula has no ingredients to vary.");
+      setFeedbackMsg({ type: "error", text: "Formula has no ingredients to vary." });
       return;
     }
+    setFeedbackMsg(null);
     const now = new Date().toISOString();
     const variations = [
       { suffix: "+10%", factor: 1.1 },
@@ -237,6 +240,17 @@ export default function FormulasPage() {
           New Formula
         </Button>
       </PageHeader>
+
+      {feedbackMsg && (
+        <div className={`rounded-md px-4 py-3 text-sm flex items-center justify-between ${
+          feedbackMsg.type === "error"
+            ? "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800"
+            : "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800"
+        }`}>
+          <span>{feedbackMsg.text}</span>
+          <button onClick={() => setFeedbackMsg(null)} className="ml-2 hover:opacity-70">✕</button>
+        </div>
+      )}
 
       {/* Formula cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -425,7 +439,7 @@ export default function FormulasPage() {
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCreate}>Create</Button>
+            <Button onClick={handleCreate} disabled={!newName.trim()}>Create</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

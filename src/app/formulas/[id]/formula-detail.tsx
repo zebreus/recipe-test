@@ -260,6 +260,7 @@ export default function FormulaDetailClient({ id }: { id: string }) {
                                   <Input
                                     type="number"
                                     step="0.1"
+                                    min="0"
                                     className="h-8"
                                     value={line.massG}
                                     onChange={(e) =>
@@ -530,10 +531,12 @@ export default function FormulaDetailClient({ id }: { id: string }) {
                   <Label className="text-xs">Change (%)</Label>
                   <Input
                     type="number"
+                    min="1"
+                    max="100"
                     className="w-24"
                     value={sensitivityDelta}
                     onChange={(e) =>
-                      setSensitivityDelta(Number(e.target.value))
+                      setSensitivityDelta(Math.max(1, Math.min(100, Number(e.target.value))))
                     }
                   />
                 </div>
@@ -746,9 +749,10 @@ export default function FormulaDetailClient({ id }: { id: string }) {
                   <Label>Target Mass (g)</Label>
                   <Input
                     type="number"
+                    min="0"
                     value={local.targetMassG}
                     onChange={(e) =>
-                      update({ targetMassG: Number(e.target.value) })
+                      update({ targetMassG: Math.max(0, Number(e.target.value)) })
                     }
                   />
                 </div>
