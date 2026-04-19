@@ -33,6 +33,7 @@ import {
   checkCompliance,
 } from "@/lib/solver";
 import { Badge } from "@/components/ui/badge";
+import { statusColor } from "@/lib/utils";
 import {
   BarChart,
   Bar,
@@ -765,6 +766,48 @@ export default function FormulaDetailClient({ id }: { id: string }) {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Related Trials */}
+      {(() => {
+        const relatedTrials = data.trials.filter((t) => t.formulaId === local.id);
+        if (relatedTrials.length === 0) return null;
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Related Trials</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {relatedTrials.map((trial) => {
+                  const trialProtocol = data.protocols.find((p) => p.id === trial.protocolId);
+                  return (
+                    <div key={trial.id} className="flex items-center justify-between border-b last:border-0 pb-2 last:pb-0">
+                      <div className="flex items-center gap-3">
+                        <Link href={`/trials/${trial.id}`} className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:underline">
+                          Trial #{trial.runNumber}
+                        </Link>
+                        <Badge className={statusColor(trial.status)} variant="outline">
+                          {trial.status}
+                        </Badge>
+                        {trialProtocol && (
+                          <Link href={`/protocols/${trialProtocol.id}`}>
+                            <Badge variant="secondary" className="text-xs hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer">
+                              {trialProtocol.name}
+                            </Badge>
+                          </Link>
+                        )}
+                      </div>
+                      <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                        {(trial.similarityScore || 0).toFixed(0)}%
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
     </div>
   );
 }

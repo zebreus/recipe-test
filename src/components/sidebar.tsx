@@ -15,9 +15,13 @@ import {
   HelpCircle,
   Moon,
   Sun,
+  Download,
+  Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/lib/theme";
+import { useStore } from "@/lib/store";
+import { useRef } from "react";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -41,6 +45,37 @@ export function Sidebar({
 }) {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
+  const { exportJSON, importJSON } = useStore();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  function handleExport() {
+    const json = exportJSON();
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "project.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function handleFileImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
+      const ok = importJSON(text);
+      if (ok) {
+        alert("Import successful!");
+      } else {
+        alert("Import failed. Invalid JSON or missing fields.");
+      }
+    };
+    reader.readAsText(file);
+    // Reset input so the same file can be re-imported
+    e.target.value = "";
+  }
 
   return (
     <>
@@ -94,7 +129,28 @@ export function Sidebar({
           })}
         </nav>
 
-        <div className="p-2 border-t border-gray-200 dark:border-gray-700">
+        <div className="p-2 border-t border-gray-200 dark:border-gray-700 space-y-0.5">
+          <button
+            onClick={handleExport}
+            className="flex w-full items-center gap-2.5 px-3 py-2 rounded-md text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+          >
+            <Download className="h-4 w-4" />
+            Export JSON
+          </button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="flex w-full items-center gap-2.5 px-3 py-2 rounded-md text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+          >
+            <Upload className="h-4 w-4" />
+            Import JSON
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={handleFileImport}
+          />
           <button
             onClick={toggleTheme}
             className="flex w-full items-center gap-2.5 px-3 py-2 rounded-md text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"

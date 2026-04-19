@@ -229,14 +229,18 @@ export default function TrialsPage() {
                   </div>
                   <div className="flex gap-2 mt-2 flex-wrap">
                     {formula && (
-                      <Badge variant="secondary" className="text-xs">
-                        {formula.name}
-                      </Badge>
+                      <Link href={`/formulas/${formula.id}`}>
+                        <Badge variant="secondary" className="text-xs hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer">
+                          {formula.name}
+                        </Badge>
+                      </Link>
                     )}
                     {protocol && (
-                      <Badge variant="secondary" className="text-xs">
-                        {protocol.name}
-                      </Badge>
+                      <Link href={`/protocols/${protocol.id}`}>
+                        <Badge variant="secondary" className="text-xs hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer">
+                          {protocol.name}
+                        </Badge>
+                      </Link>
                     )}
                     {trial.observations.length > 0 && (
                       <Badge variant="outline" className="text-xs">
