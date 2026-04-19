@@ -34,6 +34,7 @@ import {
   ChevronDown,
   TestTube,
   AlertTriangle,
+  Play,
 } from "lucide-react";
 import type { Protocol, ProtocolStep, Trial } from "@/lib/types";
 import { generateId, statusColor } from "@/lib/utils";
@@ -133,6 +134,39 @@ export default function ProtocolDetailClient({ id }: { id: string }) {
     setTrialDialogOpen(false);
     setNewTrialFormulaId("");
     router.push(`/trials?id=${t.id}`);
+  }
+
+  function handleCreateAndRunTrial() {
+    if (!newTrialFormulaId || !local) return;
+    const now = new Date().toISOString();
+    const runNumber = data.trials.filter((t) => t.formulaId === newTrialFormulaId).length + 1;
+    const t: Trial = {
+      id: generateId(),
+      formulaId: newTrialFormulaId,
+      protocolId: local.id,
+      runNumber,
+      status: "planned",
+      actualParameters: {},
+      observations: [],
+      measurements: [],
+      scores: data.scoringProfiles[0]?.dimensions.map((d) => ({
+        name: d.name,
+        score: 0,
+        weight: d.weight,
+        notes: "",
+      })) || [],
+      similarityScore: 0,
+      attachmentIds: [],
+      notes: "",
+      startedAt: "",
+      completedAt: "",
+      createdAt: now,
+      updatedAt: now,
+    };
+    addTrial(t);
+    setTrialDialogOpen(false);
+    setNewTrialFormulaId("");
+    router.push(`/trials?id=${t.id}&mode=run`);
   }
 
   function update(partial: Partial<Protocol>) {
@@ -677,6 +711,9 @@ export default function ProtocolDetailClient({ id }: { id: string }) {
             </Button>
             <Button onClick={handleCreateTrial} disabled={!newTrialFormulaId}>
               Create Trial
+            </Button>
+            <Button onClick={handleCreateAndRunTrial} disabled={!newTrialFormulaId}>
+              <Play className="h-4 w-4 mr-1" /> Create &amp; Run
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -25,7 +25,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Trash2, Save, Lock, Unlock, Printer, TestTube, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Save, Lock, Unlock, Printer, TestTube, AlertTriangle, Play } from "lucide-react";
 import type { Formula, FormulaLine, Trial } from "@/lib/types";
 import {
   COMPONENT_KEYS,
@@ -132,6 +132,39 @@ export default function FormulaDetailClient({ id }: { id: string }) {
     setTrialDialogOpen(false);
     setNewTrialProtocolId("");
     router.push(`/trials?id=${t.id}`);
+  }
+
+  function handleCreateAndRunTrial() {
+    if (!newTrialProtocolId || !local) return;
+    const now = new Date().toISOString();
+    const runNumber = data.trials.filter((t) => t.formulaId === local.id).length + 1;
+    const t: Trial = {
+      id: generateId(),
+      formulaId: local.id,
+      protocolId: newTrialProtocolId,
+      runNumber,
+      status: "planned",
+      actualParameters: {},
+      observations: [],
+      measurements: [],
+      scores: data.scoringProfiles[0]?.dimensions.map((d) => ({
+        name: d.name,
+        score: 0,
+        weight: d.weight,
+        notes: "",
+      })) || [],
+      similarityScore: 0,
+      attachmentIds: [],
+      notes: "",
+      startedAt: "",
+      completedAt: "",
+      createdAt: now,
+      updatedAt: now,
+    };
+    addTrial(t);
+    setTrialDialogOpen(false);
+    setNewTrialProtocolId("");
+    router.push(`/trials?id=${t.id}&mode=run`);
   }
 
   function update(partial: Partial<Formula>) {
@@ -926,6 +959,9 @@ export default function FormulaDetailClient({ id }: { id: string }) {
             </Button>
             <Button onClick={handleCreateTrial} disabled={!newTrialProtocolId}>
               Create Trial
+            </Button>
+            <Button onClick={handleCreateAndRunTrial} disabled={!newTrialProtocolId}>
+              <Play className="h-4 w-4 mr-1" /> Create &amp; Run
             </Button>
           </DialogFooter>
         </DialogContent>

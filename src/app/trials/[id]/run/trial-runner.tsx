@@ -286,7 +286,7 @@ export default function TrialRunnerClient({ id }: { id: string }) {
       <div className="space-y-4 p-4">
         <Link href="/trials">
           <Button variant="ghost" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-1" /> Back
+            <ArrowLeft className="h-4 w-4 mr-1" /> Back to trials
           </Button>
         </Link>
         <p className="text-gray-500 dark:text-gray-400">Trial not found.</p>
