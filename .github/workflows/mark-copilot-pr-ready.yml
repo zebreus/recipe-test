@@ -1,0 +1,55 @@
+name: Mark Copilot PR Ready for Review
+
+on:
+  workflow_run:
+    workflows: ["Copilot"]
+    types: [completed]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  mark-ready:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Mark draft PR as ready for review
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const headSha = context.payload.workflow_run.head_sha;
+            const headBranch = context.payload.workflow_run.head_branch;
+            const headRepository = context.payload.workflow_run.head_repository;
+            const headOwner = headRepository?.owner?.login;
+
+            if (!headOwner) {
+              console.log('No head repository owner found for workflow run');
+              return;
+            }
+
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              head: `${headOwner}:${headBranch}`,
+              per_page: 100,
+            });
+
+            const draftPRs = prs.filter(pr => pr.draft && pr.head.sha === headSha);
+
+            if (draftPRs.length === 0) {
+              console.log('No draft PR found for SHA:', headSha);
+              return;
+            }
+
+            for (const pr of draftPRs) {
+              console.log(`Marking PR #${pr.number} as ready for review`);
+
+              await github.rest.pulls.markReadyForReview({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+              });
+
+              console.log(`PR #${pr.number} is now ready for review`);
+            }
