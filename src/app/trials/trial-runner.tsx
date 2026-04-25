@@ -214,12 +214,13 @@ export default function TrialRunnerClient({ id }: { id: string }) {
         const prevStep = steps[fromStepIdx];
         if (prevStep) {
           const now = new Date().toISOString();
+          const nowMs = new Date(now).getTime();
           setStepLogs((prev) => {
             const existing = prev.find((l) => l.stepId === prevStep.id);
             const startedAt = existing?.startedAt ?? null;
             const durationActualSec =
               startedAt
-                ? Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000)
+                ? Math.floor((nowMs - new Date(startedAt).getTime()) / 1000)
                 : null;
             const updated: TrialStepLog = {
               stepId: prevStep.id,
@@ -247,6 +248,18 @@ export default function TrialRunnerClient({ id }: { id: string }) {
       setTimerRunning(false);
       setStepStartConfirmed(false);
       setEventConfirmed(false);
+      // Initialize container states for new step's agitation if not already set
+      if (nextStep?.containerAgitation) {
+        setContainerStates((prev) => {
+          const updates: ContainerState[] = [];
+          for (const [cid, agit] of Object.entries(nextStep.containerAgitation!)) {
+            if (!prev.find((c) => c.containerId === cid)) {
+              updates.push({ containerId: cid, temperatureC: null, agitation: agit, contents: [], notes: "" });
+            }
+          }
+          return updates.length ? [...prev, ...updates] : prev;
+        });
+      }
       // Cancel any pending scroll before scheduling a new one
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
@@ -507,15 +520,15 @@ export default function TrialRunnerClient({ id }: { id: string }) {
   }
 
   function getContainerState(containerId: string): ContainerState {
-    return (
-      containerStates.find((c) => c.containerId === containerId) ?? {
-        containerId,
-        temperatureC: null,
-        agitation: currentStep?.containerAgitation?.[containerId] ?? "none",
-        contents: [],
-        notes: "",
-      }
-    );
+    const stored = containerStates.find((c) => c.containerId === containerId);
+    if (stored) return stored;
+    return {
+      containerId,
+      temperatureC: null,
+      agitation: currentStep?.containerAgitation?.[containerId] ?? "none",
+      contents: [],
+      notes: "",
+    };
   }
 
   return (
