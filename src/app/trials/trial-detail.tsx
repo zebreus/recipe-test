@@ -273,6 +273,7 @@ export default function TrialDetailClient({ id }: { id: string }) {
           <TabsTrigger value="parameters">Parameters</TabsTrigger>
           <TabsTrigger value="notes">Notes</TabsTrigger>
           <TabsTrigger value="deviations">Deviations</TabsTrigger>
+          <TabsTrigger value="steplog">Step Log</TabsTrigger>
         </TabsList>
 
         {/* Scoring */}
@@ -792,6 +793,84 @@ export default function TrialDetailClient({ id }: { id: string }) {
                   </CardContent>
                 </Card>
               </div>
+            );
+          })()}
+        </TabsContent>
+
+        {/* ─── Step Log tab ─── */}
+        <TabsContent value="steplog">
+          {(() => {
+            const logs = local.stepLogs || [];
+            const protocol = data.protocols.find((p) => p.id === local.protocolId);
+            const steps = protocol?.steps ?? [];
+            const stepMap = new Map(steps.map((s) => [s.id, s.name]));
+
+            if (logs.length === 0) {
+              return (
+                <Card>
+                  <CardContent className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                    No step log recorded for this trial. Step timing is captured automatically during trial execution.
+                  </CardContent>
+                </Card>
+              );
+            }
+
+            return (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-semibold">Step Timing Log</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b bg-gray-50 dark:bg-gray-800">
+                          <th className="px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300">Step</th>
+                          <th className="px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300">Started</th>
+                          <th className="px-4 py-2 text-left font-medium text-gray-600 dark:text-gray-300">Completed</th>
+                          <th className="px-4 py-2 text-right font-medium text-gray-600 dark:text-gray-300">Duration</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {logs.map((log, i) => {
+                          const startedAt = log.startedAt ? new Date(log.startedAt) : null;
+                          const completedAt = log.completedAt ? new Date(log.completedAt) : null;
+                          const actualMs =
+                            startedAt && completedAt
+                              ? completedAt.getTime() - startedAt.getTime()
+                              : null;
+                          const actualMin = actualMs != null ? Math.round(actualMs / 60000) : null;
+                          const formatTs = (d: Date | null) =>
+                            d ? d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—";
+
+                          return (
+                            <tr key={i} className="border-b last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                              <td className="px-4 py-2 text-gray-800 dark:text-gray-200">
+                                {stepMap.get(log.stepId) ?? log.stepId}
+                              </td>
+                              <td className="px-4 py-2 text-gray-600 dark:text-gray-400 font-mono text-xs">
+                                {formatTs(startedAt)}
+                              </td>
+                              <td className="px-4 py-2 text-gray-600 dark:text-gray-400 font-mono text-xs">
+                                {formatTs(completedAt)}
+                              </td>
+                              <td className="px-4 py-2 text-right">
+                                {actualMin != null ? (
+                                  <Badge variant="secondary" className="text-xs">
+                                    {actualMin} min
+                                  </Badge>
+                                ) : (
+                                  <span className="text-gray-400">—</span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
             );
           })()}
         </TabsContent>
