@@ -19,7 +19,7 @@ import type {
   Attachment,
   ScoringProfile,
 } from "./types";
-import { createSeedData } from "./seed";
+import { createSeedData, createDefaultProjectData } from "./seed";
 import {
   calculateFormulaComponents,
   calculateMassBalance,
@@ -28,14 +28,14 @@ import {
 const STORAGE_KEY = "recipe-reverse-eng-project";
 
 function loadData(): ProjectData {
-  if (typeof window === "undefined") return createSeedData();
+  if (typeof window === "undefined") return createDefaultProjectData();
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw) as ProjectData;
   } catch {
     /* ignore */
   }
-  const seed = createSeedData();
+  const seed = createDefaultProjectData();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
   return seed;
 }
@@ -93,13 +93,14 @@ interface StoreContextValue {
   // Utilities
   exportJSON: () => string;
   importJSON: (json: string) => boolean;
-  resetToSeed: () => void;
+  resetToEmptyProject: () => void;
+  loadExampleData: () => void;
 }
 
 const StoreContext = createContext<StoreContextValue | null>(null);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [data, setData] = useState<ProjectData>(() => createSeedData());
+  const [data, setData] = useState<ProjectData>(() => createDefaultProjectData());
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -309,7 +310,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
     [persist]
   );
-  const resetToSeed = useCallback(() => {
+  const resetToEmptyProject = useCallback(() => {
+    persist(createDefaultProjectData());
+  }, [persist]);
+  const loadExampleData = useCallback(() => {
     persist(createSeedData());
   }, [persist]);
 
@@ -349,7 +353,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         updateScoringProfiles,
         exportJSON,
         importJSON,
-        resetToSeed,
+        resetToEmptyProject,
+        loadExampleData,
       }}
     >
       {children}

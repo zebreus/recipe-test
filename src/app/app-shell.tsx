@@ -5,6 +5,7 @@ import { StoreProvider } from "@/lib/store";
 import { ThemeProvider } from "@/lib/theme";
 import { Sidebar } from "@/components/sidebar";
 import { FlaskConical, Menu } from "lucide-react";
+import { Agentation } from "agentation";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -36,6 +37,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </main>
           </div>
         </div>
+        <Agentation />
       </StoreProvider>
     </ThemeProvider>
   );

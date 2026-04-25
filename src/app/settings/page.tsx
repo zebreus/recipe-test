@@ -14,12 +14,16 @@ import {
   Save,
   Plus,
   Trash2,
+  FlaskConical,
+  FileText,
 } from "lucide-react";
 import { generateId, exportFilename, describeImportError } from "@/lib/utils";
-import type { ScoringProfile } from "@/lib/types";
+import type { ScoringProfile, Ingredient } from "@/lib/types";
+import { COMPONENT_KEYS, COMPONENT_LABELS } from "@/lib/types";
+import { isUnmodifiedCommonIngredient } from "@/lib/common-ingredients";
 
 export default function SettingsPage() {
-  const { data, updateProject, exportJSON, importJSON, resetToSeed, updateScoringProfiles } =
+  const { data, updateProject, exportJSON, importJSON, resetToEmptyProject, loadExampleData, updateScoringProfiles } =
     useStore();
   const [projectName, setProjectName] = useState(data.project.name);
   const [importText, setImportText] = useState("");
@@ -97,12 +101,95 @@ export default function SettingsPage() {
   function handleReset() {
     if (
       confirm(
-        "Reset to seed data? This will erase all your current data."
+        "Reset to empty project? This will erase all your current data."
       )
     ) {
-      resetToSeed();
+      resetToEmptyProject();
       setImportStatus(null);
     }
+  }
+
+  function handleLoadExample() {
+    if (
+      confirm(
+        "Load the Müller Rice example project? This will replace all your current data."
+      )
+    ) {
+      loadExampleData();
+      setImportStatus(null);
+    }
+  }
+
+  function escapeMdTableCell(value: string): string {
+    return value.replace(/\|/g, "\\|").replace(/\r?\n/g, " ");
+  }
+
+  function escapeMdInline(value: string): string {
+    return value.replace(/\r?\n/g, " ").replace(/([_*`#[\]\\])/g, "\\$1");
+  }
+
+  function ingredientsMarkdownFilename(projectName: string): string {
+    const sanitizedBase = projectName
+      .replace(/[^a-z0-9]/gi, "_")
+      .toLowerCase()
+      .replace(/^_+|_+$/g, "");
+    const baseName = sanitizedBase || "project";
+    return `${baseName}-ingredients.md`;
+  }
+
+  function buildIngredientsMarkdown(ingredients: Ingredient[]): string {
+    const custom = ingredients.filter(
+      (ing) => !isUnmodifiedCommonIngredient(ing)
+    );
+    if (custom.length === 0) {
+      return "# Custom Ingredient Library\n\nNo manually added or modified ingredients found.\n";
+    }
+    const lines: string[] = [
+      "# Custom Ingredient Library",
+      "",
+      `_Exported from RErecipe project: **${escapeMdInline(data.project.name)}**_`,
+      `_Date: ${new Date().toLocaleString()}_`,
+      "",
+      `${custom.length} ingredient${custom.length !== 1 ? "s" : ""} added manually or modified from quick-add defaults.`,
+      "",
+    ];
+    for (const ing of custom) {
+      lines.push(`## ${escapeMdInline(ing.name)}`);
+      lines.push("");
+      lines.push(`- **Category:** ${escapeMdInline(ing.category)}`);
+      lines.push(`- **Density:** ${ing.density_g_ml} g/mL`);
+      lines.push(`- **Cost per kg:** $${ing.costPerKg}`);
+      lines.push(`- **Confidence:** ${(ing.confidence * 100).toFixed(0)}%`);
+      if (ing.source) lines.push(`- **Source:** ${escapeMdInline(ing.source)}`);
+      lines.push("");
+      lines.push("### Composition");
+      lines.push("");
+      lines.push("| Component | % |");
+      lines.push("|-----------|---|");
+      for (const key of COMPONENT_KEYS) {
+        const val = ing.composition[key];
+        if (val !== 0) {
+          lines.push(`| ${escapeMdTableCell(COMPONENT_LABELS[key])} | ${val} |`);
+        }
+      }
+      if (ing.notes) {
+        lines.push("");
+        lines.push(`**Notes:** ${escapeMdInline(ing.notes)}`);
+      }
+      lines.push("");
+    }
+    return lines.join("\n");
+  }
+
+  function handleExportIngredientsMarkdown() {
+    const md = buildIngredientsMarkdown(data.ingredients);
+    const blob = new Blob([md], { type: "text/markdown;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = ingredientsMarkdownFilename(data.project.name);
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -141,13 +228,48 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="text-base">Export Project</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
             Download the entire project as a single JSON file.
           </p>
           <Button onClick={handleExport}>
             <Download className="h-4 w-4 mr-1" /> Export JSON
           </Button>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
+            Export ingredients you added manually or modified from quick-add
+            defaults as a Markdown file.
+          </p>
+          <Button variant="outline" onClick={handleExportIngredientsMarkdown}>
+            <FileText className="h-4 w-4 mr-1" /> Export Custom Ingredients (Markdown)
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Example Project</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            The Müller Rice reverse-engineering demo project. Download it as
+            JSON or load it directly into the app.
+          </p>
+          <div className="flex gap-3 flex-wrap">
+            <Button
+              variant="outline"
+              onClick={() => {
+                const a = document.createElement("a");
+                a.href = "/milchreis-example.json";
+                a.download = "milchreis-example.json";
+                a.click();
+              }}
+            >
+              <Download className="h-4 w-4 mr-1" /> Download Example JSON
+            </Button>
+            <Button variant="outline" onClick={handleLoadExample}>
+              <FlaskConical className="h-4 w-4 mr-1" /> Load Example Data
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -394,10 +516,10 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-            Reset to sample/seed data. All current data will be lost.
+            Reset to an empty project. All current data will be lost.
           </p>
           <Button variant="destructive" onClick={handleReset}>
-            <RotateCcw className="h-4 w-4 mr-1" /> Reset to Seed Data
+            <RotateCcw className="h-4 w-4 mr-1" /> Reset to Empty Project
           </Button>
         </CardContent>
       </Card>
