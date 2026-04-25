@@ -5,6 +5,7 @@ import { useStore } from "@/lib/store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -25,7 +26,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Trash2, Save, Lock, Unlock, Printer, TestTube, AlertTriangle, Play, ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Save, Lock, Unlock, Printer, TestTube, AlertTriangle, Play, ArrowUp, ArrowDown, Wand2, Info } from "lucide-react";
 import type { Formula, FormulaLine, Trial } from "@/lib/types";
 import { nutritionColor } from "@/lib/types";
 import {
@@ -37,6 +38,7 @@ import {
   checkCompliance,
   checkIngredientOrderCompliance,
   totalFormulaMassG,
+  runFormulaOptimizer,
 } from "@/lib/solver";
 import { Badge } from "@/components/ui/badge";
 import { generateId, statusColor } from "@/lib/utils";
@@ -66,6 +68,8 @@ export default function FormulaDetailClient({ id }: { id: string }) {
 
   const relatedTrials = data.trials.filter((t) => t.formulaId === id);
   const hasTrials = relatedTrials.length > 0;
+
+  const showCostColumn = data.settings.showCostColumn;
 
   if (!local || !formula) {
     return (
@@ -233,6 +237,17 @@ export default function FormulaDetailClient({ id }: { id: string }) {
         )
       : null;
 
+  function runSolver() {
+    if (!local) return;
+    const optimized = runFormulaOptimizer(
+      local.ingredientLines,
+      ingredients,
+      trackedNutrients,
+      local.targetMassG
+    );
+    update({ ingredientLines: optimized });
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -338,23 +353,43 @@ export default function FormulaDetailClient({ id }: { id: string }) {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-base">Ingredient Lines</CardTitle>
-                  <Button size="sm" variant="outline" onClick={addLine}>
-                    <Plus className="h-3.5 w-3.5 mr-1" /> Add
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={runSolver}
+                      disabled={local.ingredientLines.length === 0 || trackedNutrients.length === 0}
+                      title="Adjust unlocked ingredient masses to match the target nutrition profile. Lock ingredients whose mass you want to keep fixed."
+                    >
+                      <Wand2 className="h-3.5 w-3.5 mr-1" /> Run Solver
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={addLine}>
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Add
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {local.ingredientLines.length === 0 ? (
-                    <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-6">
-                      No ingredients added yet.
-                    </p>
+                    <div className="text-center py-6 space-y-2">
+                      <p className="text-sm text-gray-400 dark:text-gray-500">
+                        No ingredients added yet.
+                      </p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 flex items-center justify-center gap-1">
+                        <Info className="h-3.5 w-3.5 shrink-0" />
+                        Add ingredients, set a target mass, then click <strong>&nbsp;Run Solver&nbsp;</strong> to automatically adjust masses to match your target nutrition.
+                        Lock any ingredient whose mass you want to keep fixed.
+                      </p>
+                    </div>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b text-left text-gray-500 dark:text-gray-400">
                             <th className="pb-2 font-medium">Ingredient</th>
-                            <th className="pb-2 font-medium w-28">Mass (g)</th>
-                            <th className="pb-2 font-medium w-24">Cost ($)</th>
+                            <th className="pb-2 font-medium">Mass (g)</th>
+                            {showCostColumn && (
+                              <th className="pb-2 font-medium w-24">Cost ($)</th>
+                            )}
                             <th className="pb-2 font-medium w-16">Lock</th>
                             <th className="pb-2 font-medium w-16">Order</th>
                             <th className="pb-2 font-medium w-12"></th>
@@ -368,12 +403,21 @@ export default function FormulaDetailClient({ id }: { id: string }) {
                             const lineCost = ing
                               ? (line.massG * ing.costPerKg) / 1000
                               : 0;
+                            const totalMass = local.ingredientLines.reduce(
+                              (s, l) => s + l.massG,
+                              0
+                            );
+                            const sliderMax = Math.max(
+                              local.targetMassG > 0 ? local.targetMassG : totalMass,
+                              totalMass,
+                              100
+                            );
                             return (
                               <tr
                                 key={idx}
                                 className="border-b last:border-0"
                               >
-                                <td className="py-2">
+                                <td className="py-2 pr-2 w-40">
                                   <Select
                                     value={line.ingredientId}
                                     onValueChange={(val) =>
@@ -397,23 +441,38 @@ export default function FormulaDetailClient({ id }: { id: string }) {
                                     </SelectContent>
                                   </Select>
                                 </td>
-                                <td className="py-2">
-                                  <Input
-                                    type="number"
-                                    step="0.1"
-                                    min="0"
-                                    className="h-8"
-                                    value={line.massG}
-                                    onChange={(e) =>
-                                      updateLine(idx, {
-                                        massG: Number(e.target.value),
-                                      })
-                                    }
-                                  />
+                                <td className="py-2 pr-2">
+                                  <div className="flex items-center gap-2">
+                                    <Slider
+                                      min={0}
+                                      max={sliderMax}
+                                      step={0.1}
+                                      value={[line.massG]}
+                                      onValueChange={([val]) =>
+                                        updateLine(idx, { massG: val })
+                                      }
+                                      className="w-24 shrink-0"
+                                      disabled={line.locked}
+                                    />
+                                    <Input
+                                      type="number"
+                                      step="0.1"
+                                      min="0"
+                                      className="h-8 w-20 shrink-0"
+                                      value={line.massG}
+                                      onChange={(e) =>
+                                        updateLine(idx, {
+                                          massG: Number(e.target.value),
+                                        })
+                                      }
+                                    />
+                                  </div>
                                 </td>
-                                <td className="py-2 text-right text-gray-700 dark:text-gray-300 tabular-nums">
-                                  ${lineCost.toFixed(2)}
-                                </td>
+                                {showCostColumn && (
+                                  <td className="py-2 text-right text-gray-700 dark:text-gray-300 tabular-nums">
+                                    ${lineCost.toFixed(2)}
+                                  </td>
+                                )}
                                 <td className="py-2 text-center">
                                   <Button
                                     variant="ghost"
@@ -476,14 +535,27 @@ export default function FormulaDetailClient({ id }: { id: string }) {
                           <tr className="border-t">
                             <td className="py-2 font-medium text-gray-900 dark:text-gray-100">Total</td>
                             <td className="py-2 font-medium text-gray-900 dark:text-gray-100">
-                              {local.ingredientLines.reduce((sum, l) => sum + l.massG, 0).toFixed(1)} g
+                              <span className={`${Math.abs(mb.lossG) > 0.05 ? (mb.lossG > 0 ? "text-amber-600 dark:text-amber-400" : "text-blue-600 dark:text-blue-400") : ""}`}>
+                                {local.ingredientLines.reduce((sum, l) => sum + l.massG, 0).toFixed(1)} g
+                              </span>
+                              {local.targetMassG > 0 && (
+                                <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                                  {mb.lossG > 0.05
+                                    ? `(+${mb.lossG.toFixed(1)} g vs target)`
+                                    : mb.lossG < -0.05
+                                    ? `(${mb.lossG.toFixed(1)} g vs target)`
+                                    : "(matches target)"}
+                                </span>
+                              )}
                             </td>
-                            <td className="py-2 text-right font-medium text-gray-900 dark:text-gray-100 tabular-nums">
-                              ${local.ingredientLines.reduce((sum, l) => {
-                                const ing = ingredients.find((i) => i.id === l.ingredientId);
-                                return sum + (ing ? (l.massG * ing.costPerKg) / 1000 : 0);
-                              }, 0).toFixed(2)}
-                            </td>
+                            {showCostColumn && (
+                              <td className="py-2 text-right font-medium text-gray-900 dark:text-gray-100 tabular-nums">
+                                ${local.ingredientLines.reduce((sum, l) => {
+                                  const ing = ingredients.find((i) => i.id === l.ingredientId);
+                                  return sum + (ing ? (l.massG * ing.costPerKg) / 1000 : 0);
+                                }, 0).toFixed(2)}
+                              </td>
+                            )}
                             <td></td>
                             <td></td>
                             <td></td>
@@ -496,59 +568,8 @@ export default function FormulaDetailClient({ id }: { id: string }) {
               </Card>
             </div>
 
-            {/* Mass balance & summary */}
+            {/* Nutrition summary */}
             <div className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">Mass Balance</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500 dark:text-gray-400">Total Input</span>
-                    <span className="font-medium">
-                      {mb.totalInputG.toFixed(1)} g
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500 dark:text-gray-400">Target Output</span>
-                    <span className="font-medium">
-                      {mb.totalOutputG.toFixed(1)} g
-                    </span>
-                  </div>
-                  <div className="flex justify-between border-t pt-2">
-                    <span className="text-gray-500 dark:text-gray-400">Loss / Gain</span>
-                    <span
-                      className={`font-medium ${
-                        mb.lossG > 0 ? "text-red-600 dark:text-red-400" : "text-green-600 dark:text-green-400"
-                      }`}
-                    >
-                      {mb.lossG > 0 ? "+" : ""}
-                      {mb.lossG.toFixed(1)} g ({mb.lossPct.toFixed(1)}%)
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500 dark:text-gray-400">Water Adjustment</span>
-                    <span>{mb.waterAdjustmentG.toFixed(1)} g</span>
-                  </div>
-                  <div className="flex justify-between border-t pt-2">
-                    <span className="text-gray-500 dark:text-gray-400">Estimated Cost</span>
-                    <span className="font-medium">
-                      ${local.ingredientLines
-                        .reduce((sum, line) => {
-                          const ing = ingredients.find(
-                            (i) => i.id === line.ingredientId
-                          );
-                          return (
-                            sum +
-                            (ing?.costPerKg ?? 0) * (line.massG / 1000)
-                          );
-                        }, 0)
-                        .toFixed(2)}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base">
@@ -561,20 +582,45 @@ export default function FormulaDetailClient({ id }: { id: string }) {
                       No nutritional values tracked. Configure them on the Target page.
                     </p>
                   ) : (
-                    trackedNutrients.map((n) => (
-                      <div key={n.name} className="flex justify-between">
-                        <span className="flex items-center gap-1.5">
-                          <span
-                            className="w-2 h-2 rounded-full"
-                            style={{ backgroundColor: nutritionColor(n.name) }}
-                          />
-                          {n.name}
-                        </span>
-                        <span>
-                          {(calc[n.name] ?? 0).toFixed(2)} {n.unit}
-                        </span>
+                    <>
+                      <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 pb-1 text-xs font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide">
+                        <span>Nutrient</span>
+                        <span className="text-right">Value</span>
+                        <span className="text-right">vs Target</span>
                       </div>
-                    ))
+                      {trackedNutrients.map((n) => {
+                        const formulaVal = calc[n.name] ?? 0;
+                        const targetVal = n.per100g;
+                        const diff = formulaVal - targetVal;
+                        const denom = Math.max(Math.abs(targetVal), Math.abs(formulaVal), 1e-3);
+                        const relPct = (Math.abs(diff) / denom) * 100;
+                        const diffColor =
+                          relPct <= 10
+                            ? "text-green-600 dark:text-green-400"
+                            : relPct <= 25
+                            ? "text-yellow-600 dark:text-yellow-400"
+                            : "text-red-600 dark:text-red-400";
+                        return (
+                          <div key={n.name} className="grid grid-cols-[1fr_auto_auto] gap-x-3 items-center">
+                            <span className="flex items-center gap-1.5 truncate">
+                              <span
+                                className="w-2 h-2 rounded-full shrink-0"
+                                style={{ backgroundColor: nutritionColor(n.name) }}
+                              />
+                              {n.name}
+                            </span>
+                            <span className="text-right tabular-nums">
+                              {formulaVal.toFixed(2)}&nbsp;{n.unit}
+                            </span>
+                            <span className={`text-right tabular-nums text-xs ${diffColor}`}>
+                              {targetVal === 0 && formulaVal === 0
+                                ? "—"
+                                : `${diff >= 0 ? "+" : ""}${diff.toFixed(1)} (${diff >= 0 ? "+" : ""}${relPct.toFixed(0)}%)`}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </>
                   )}
                   <div className="flex justify-between border-t pt-1 font-medium">
                     <span>Total Mass</span>
@@ -597,6 +643,29 @@ export default function FormulaDetailClient({ id }: { id: string }) {
                   </div>
                 </CardContent>
               </Card>
+
+              {showCostColumn && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Estimated Cost</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm space-y-1">
+                    <div className="flex justify-between font-medium">
+                      <span className="text-gray-500 dark:text-gray-400">Total</span>
+                      <span>
+                        ${local.ingredientLines
+                          .reduce((sum, line) => {
+                            const ing = ingredients.find(
+                              (i) => i.id === line.ingredientId
+                            );
+                            return sum + (ing?.costPerKg ?? 0) * (line.massG / 1000);
+                          }, 0)
+                          .toFixed(2)}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </TabsContent>
