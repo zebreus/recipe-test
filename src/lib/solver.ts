@@ -2,6 +2,7 @@ import type {
   CalculatedNutrition,
   FormulaLine,
   Ingredient,
+  MassBalance,
   Trial,
   TargetProduct,
   Formula,
@@ -44,8 +45,11 @@ export function calculateFormulaNutrition(
   const totalG = totalFormulaMassG(lines);
   if (totalG <= 0) return result;
 
+  // Build a lookup map once to avoid O(n) find() per line.
+  const ingById = new Map<string, Ingredient>(ingredients.map((i) => [i.id, i]));
+
   for (const line of lines) {
-    const ing = ingredients.find((i) => i.id === line.ingredientId);
+    const ing = ingById.get(line.ingredientId);
     if (!ing) continue;
     for (const name of names) {
       // (mass / 100) * value-per-100g = absolute amount of nutrient
@@ -65,7 +69,7 @@ export function calculateFormulaNutrition(
 export function calculateMassBalance(
   lines: FormulaLine[],
   targetMassG: number
-) {
+): MassBalance {
   const totalInput = totalFormulaMassG(lines);
   const lossG = totalInput - targetMassG;
   return {
@@ -94,8 +98,9 @@ export function ingredientContributions(
   target: NutritionalValue[]
 ): IngredientContribution[] {
   const names = trackedNames(target);
+  const ingById = new Map<string, Ingredient>(ingredients.map((i) => [i.id, i]));
   return lines.map((line) => {
-    const ing = ingredients.find((i) => i.id === line.ingredientId);
+    const ing = ingById.get(line.ingredientId);
     const values: Record<string, number> = {};
     for (const name of names) {
       values[name] = ing

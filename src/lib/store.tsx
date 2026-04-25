@@ -44,15 +44,36 @@ function normalizeProjectData(
   };
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function isValidTargetNutritionEntry(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.name === "string" &&
+    typeof value.unit === "string" &&
+    isFiniteNumber(value.per100g)
+  );
+}
+
 // Returns true if `parsed` looks like the current schema (new flexible
 // nutritional values model). Old pre-refactor data is rejected so we
 // don't need a migration path.
 function isCurrentSchema(parsed: unknown): boolean {
-  if (!parsed || typeof parsed !== "object") return false;
-  const tp = (parsed as { targetProduct?: { targetNutrition?: unknown } })
-    .targetProduct;
-  if (!tp || !Array.isArray(tp.targetNutrition)) return false;
-  return true;
+  if (!isRecord(parsed)) return false;
+  if (!Array.isArray(parsed.ingredients) || !Array.isArray(parsed.formulas)) {
+    return false;
+  }
+  const targetProduct = parsed.targetProduct;
+  if (!isRecord(targetProduct)) return false;
+  const targetNutrition = targetProduct.targetNutrition;
+  if (!Array.isArray(targetNutrition)) return false;
+  return targetNutrition.every(isValidTargetNutritionEntry);
 }
 
 function loadData(): ProjectData {

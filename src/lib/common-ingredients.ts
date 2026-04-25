@@ -270,10 +270,11 @@ export function isUnmodifiedCommonIngredient(ing: {
   if (match.density_g_ml !== ing.density_g_ml) return false;
   if (match.costPerKg !== ing.costPerKg) return false;
   const matchKeys = Object.keys(match.nutrition);
-  const ingKeys = Object.keys(ing.nutrition ?? {});
-  if (matchKeys.length !== ingKeys.length) return false;
+  // Only compare the preset's own keys. Extra keys on the ingredient are
+  // acceptable if they were added by the target editor and hold their zero
+  // default — that doesn't count as the user having modified the ingredient.
   for (const key of matchKeys) {
-    if (match.nutrition[key] !== ing.nutrition[key]) return false;
+    if (match.nutrition[key] !== (ing.nutrition?.[key] ?? 0)) return false;
   }
   return true;
 }

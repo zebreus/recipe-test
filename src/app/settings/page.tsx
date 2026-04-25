@@ -164,11 +164,19 @@ export default function SettingsPage() {
       lines.push("");
       lines.push("### Nutrition (per 100 g)");
       lines.push("");
-      lines.push("| Nutrient | Value |");
-      lines.push("|----------|-------|");
+      lines.push("| Nutrient | Value | Unit |");
+      lines.push("|----------|-------|------|");
+      // Look up the unit for each nutrient from the target nutrition list when
+      // available; fall back to an empty string for nutrients not in the target.
+      const unitByName = new Map(
+        data.targetProduct.targetNutrition.map((n) => [n.name, n.unit])
+      );
       for (const [name, val] of Object.entries(ing.nutrition ?? {})) {
         if (val !== 0) {
-          lines.push(`| ${escapeMdTableCell(name)} | ${val} |`);
+          const unit = unitByName.get(name) ?? "";
+          lines.push(
+            `| ${escapeMdTableCell(name)} | ${val} | ${escapeMdTableCell(unit)} |`
+          );
         }
       }
       if (ing.notes) {
