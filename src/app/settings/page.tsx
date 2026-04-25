@@ -23,7 +23,7 @@ import { COMPONENT_KEYS, COMPONENT_LABELS } from "@/lib/types";
 import { isUnmodifiedCommonIngredient } from "@/lib/common-ingredients";
 
 export default function SettingsPage() {
-  const { data, updateProject, exportJSON, importJSON, resetToSeed, loadExampleData, updateScoringProfiles } =
+  const { data, updateProject, exportJSON, importJSON, resetToEmptyProject, loadExampleData, updateScoringProfiles } =
     useStore();
   const [projectName, setProjectName] = useState(data.project.name);
   const [importText, setImportText] = useState("");
@@ -104,7 +104,7 @@ export default function SettingsPage() {
         "Reset to empty project? This will erase all your current data."
       )
     ) {
-      resetToSeed();
+      resetToEmptyProject();
       setImportStatus(null);
     }
   }
@@ -120,6 +120,23 @@ export default function SettingsPage() {
     }
   }
 
+  function escapeMdTableCell(value: string): string {
+    return value.replace(/\|/g, "\\|").replace(/\r?\n/g, " ");
+  }
+
+  function escapeMdInline(value: string): string {
+    return value.replace(/\r?\n/g, " ").replace(/([_*`#[\]\\])/g, "\\$1");
+  }
+
+  function ingredientsMarkdownFilename(projectName: string): string {
+    const sanitizedBase = projectName
+      .replace(/[^a-z0-9]/gi, "_")
+      .toLowerCase()
+      .replace(/^_+|_+$/g, "");
+    const baseName = sanitizedBase || "project";
+    return `${baseName}-ingredients.md`;
+  }
+
   function buildIngredientsMarkdown(ingredients: Ingredient[]): string {
     const custom = ingredients.filter(
       (ing) => !isUnmodifiedCommonIngredient(ing)
@@ -130,20 +147,20 @@ export default function SettingsPage() {
     const lines: string[] = [
       "# Custom Ingredient Library",
       "",
-      `_Exported from RErecipe project: **${data.project.name}**_`,
+      `_Exported from RErecipe project: **${escapeMdInline(data.project.name)}**_`,
       `_Date: ${new Date().toLocaleString()}_`,
       "",
       `${custom.length} ingredient${custom.length !== 1 ? "s" : ""} added manually or modified from quick-add defaults.`,
       "",
     ];
     for (const ing of custom) {
-      lines.push(`## ${ing.name}`);
+      lines.push(`## ${escapeMdInline(ing.name)}`);
       lines.push("");
-      lines.push(`- **Category:** ${ing.category}`);
+      lines.push(`- **Category:** ${escapeMdInline(ing.category)}`);
       lines.push(`- **Density:** ${ing.density_g_ml} g/mL`);
       lines.push(`- **Cost per kg:** $${ing.costPerKg}`);
       lines.push(`- **Confidence:** ${(ing.confidence * 100).toFixed(0)}%`);
-      if (ing.source) lines.push(`- **Source:** ${ing.source}`);
+      if (ing.source) lines.push(`- **Source:** ${escapeMdInline(ing.source)}`);
       lines.push("");
       lines.push("### Composition");
       lines.push("");
@@ -152,12 +169,12 @@ export default function SettingsPage() {
       for (const key of COMPONENT_KEYS) {
         const val = ing.composition[key];
         if (val !== 0) {
-          lines.push(`| ${COMPONENT_LABELS[key]} | ${val} |`);
+          lines.push(`| ${escapeMdTableCell(COMPONENT_LABELS[key])} | ${val} |`);
         }
       }
       if (ing.notes) {
         lines.push("");
-        lines.push(`**Notes:** ${ing.notes}`);
+        lines.push(`**Notes:** ${escapeMdInline(ing.notes)}`);
       }
       lines.push("");
     }
@@ -170,7 +187,7 @@ export default function SettingsPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${data.project.name.replace(/[^a-z0-9]/gi, "_").toLowerCase()}-ingredients.md`;
+    a.download = ingredientsMarkdownFilename(data.project.name);
     a.click();
     URL.revokeObjectURL(url);
   }

@@ -93,7 +93,7 @@ interface StoreContextValue {
   // Utilities
   exportJSON: () => string;
   importJSON: (json: string) => boolean;
-  resetToSeed: () => void;
+  resetToEmptyProject: () => void;
   loadExampleData: () => void;
 }
 
@@ -310,7 +310,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
     [persist]
   );
-  const resetToSeed = useCallback(() => {
+  const resetToEmptyProject = useCallback(() => {
     persist(createDefaultProjectData());
   }, [persist]);
   const loadExampleData = useCallback(() => {
@@ -353,7 +353,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         updateScoringProfiles,
         exportJSON,
         importJSON,
-        resetToSeed,
+        resetToEmptyProject,
         loadExampleData,
       }}
     >
