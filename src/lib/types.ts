@@ -228,7 +228,7 @@ export interface ProjectData {
   scoringProfiles: ScoringProfile[];
   attachments: Attachment[];
   notes: Note[];
-  settings?: ProjectSettings;
+  settings: ProjectSettings;
 }
 
 // ─── Component keys helper ───

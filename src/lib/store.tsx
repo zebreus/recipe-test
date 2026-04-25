@@ -20,6 +20,7 @@ import type {
   ScoringProfile,
   ProjectSettings,
 } from "./types";
+import { DEFAULT_PROJECT_SETTINGS } from "./types";
 import { createSeedData, createDefaultProjectData } from "./seed";
 import {
   calculateFormulaComponents,
@@ -28,11 +29,31 @@ import {
 
 const STORAGE_KEY = "recipe-reverse-eng-project";
 
+function normalizeProjectData(
+  data: Omit<ProjectData, "settings"> & {
+    settings?: Partial<ProjectSettings>;
+  }
+): ProjectData {
+  return {
+    ...data,
+    settings: {
+      ...DEFAULT_PROJECT_SETTINGS,
+      ...data.settings,
+    },
+  };
+}
+
 function loadData(): ProjectData {
   if (typeof window === "undefined") return createDefaultProjectData();
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as ProjectData;
+    if (raw) {
+      return normalizeProjectData(
+        JSON.parse(raw) as Omit<ProjectData, "settings"> & {
+          settings?: Partial<ProjectSettings>;
+        }
+      );
+    }
   } catch {
     /* ignore */
   }
@@ -43,10 +64,10 @@ function loadData(): ProjectData {
 
 function saveData(data: ProjectData) {
   if (typeof window === "undefined") return;
-  const updated = {
+  const updated = normalizeProjectData({
     ...data,
     project: { ...data.project, updatedAt: new Date().toISOString() },
-  };
+  });
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
   } catch (e) {
@@ -311,9 +332,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const importJSON = useCallback(
     (json: string) => {
       try {
-        const parsed = JSON.parse(json) as ProjectData;
+        const parsed = JSON.parse(json) as Omit<ProjectData, "settings"> & {
+          settings?: Partial<ProjectSettings>;
+        };
         if (!parsed.project || !parsed.ingredients) return false;
-        persist(parsed);
+        persist(normalizeProjectData(parsed));
         return true;
       } catch {
         return false;
