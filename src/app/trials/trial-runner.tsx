@@ -21,7 +21,6 @@ import {
   Clock,
   Thermometer,
   Beaker,
-  Wind,
   Send,
   AlertCircle,
   Timer,
@@ -78,21 +77,6 @@ function formatTime(seconds: number): string {
     return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   }
   return `${m}:${String(s).padStart(2, "0")}`;
-}
-
-function agitationLabel(level: string): string {
-  switch (level) {
-    case "none":
-      return "No agitation";
-    case "low":
-      return "Low agitation";
-    case "medium":
-      return "Medium agitation";
-    case "high":
-      return "High agitation";
-    default:
-      return level;
-  }
 }
 
 function agitationColor(level: string): string {

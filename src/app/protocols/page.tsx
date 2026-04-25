@@ -85,6 +85,7 @@ function ProtocolsListView() {
       updatedAt: now,
       containers: [],
     };
+    addProtocol(p);
     setNewName("");
     setNewDesc("");
     setDialogOpen(false);

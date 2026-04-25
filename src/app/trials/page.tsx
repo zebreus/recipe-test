@@ -98,6 +98,7 @@ function TrialsListView() {
       stepLogs: [],
       containerStates: [],
     };
+    addTrial(t);
     return t;
   }
 
