@@ -210,8 +210,29 @@ export default function ProtocolDetailClient({ id }: { id: string }) {
   }
 
   function removeContainer(index: number) {
+    const containerToRemove = (local!.containers || [])[index];
+    if (!containerToRemove) return;
+
     const containers = (local!.containers || []).filter((_, i) => i !== index);
-    update({ containers });
+    const steps = local!.steps.map((step) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { [containerToRemove.id]: _removedAgitation, ...remainingAgitation } =
+        step.containerAgitation || {};
+      return {
+        ...step,
+        containerId:
+          step.containerId === containerToRemove.id ? null : step.containerId,
+        containerAgitation: remainingAgitation,
+        additions: (step.additions || []).map((addition) => ({
+          ...addition,
+          containerId:
+            addition.containerId === containerToRemove.id
+              ? undefined
+              : addition.containerId,
+        })),
+      };
+    });
+    update({ containers, steps });
   }
 
   // Timeline chart data
@@ -722,19 +743,19 @@ export default function ProtocolDetailClient({ id }: { id: string }) {
                               />
                               <span className="text-gray-400">g</span>
                               <Select
-                                value={addition.containerId || "__none__"}
+                                value={containers.some((c) => c.id === addition.containerId) ? addition.containerId : undefined}
                                 onValueChange={(v) => {
                                   const additions = (step.additions || []).map((a, ai) =>
-                                    ai === addIdx ? { ...a, containerId: v === "__none__" ? "" : v } : a
+                                    ai === addIdx ? { ...a, containerId: v } : a
                                   );
                                   updateStep(idx, { additions });
                                 }}
+                                disabled={containers.length === 0}
                               >
                                 <SelectTrigger className="h-7 w-28">
-                                  <SelectValue placeholder="Container" />
+                                  <SelectValue placeholder={containers.length === 0 ? "No containers" : "Container"} />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="__none__">—</SelectItem>
                                   {containers.map((c) => (
                                     <SelectItem key={c.id} value={c.id}>
                                       {c.name || c.id}

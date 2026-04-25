@@ -175,7 +175,7 @@ export interface ProtocolContainer {
 export interface IngredientAddition {
   ingredientId: string;
   massG: number;
-  containerId: string;
+  containerId?: string;
 }
 
 export type StepDurationType = "fixed" | "after-event" | "user-confirm";

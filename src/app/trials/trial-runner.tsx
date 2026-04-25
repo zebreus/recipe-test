@@ -183,79 +183,104 @@ export default function TrialRunnerClient({ id }: { id: string }) {
     [trial, updateTrial]
   );
 
-  // Persist stepLogs + containerStates whenever they change
-  const persistStepLogs = useCallback(
-    (logs: TrialStepLog[], states: ContainerState[]) => {
-      persistTrial({ stepLogs: logs, containerStates: states });
+  // Persist stepLogs to store (containerStates kept as-is from trial)
+  const persistStepLogsToStore = useCallback(
+    (logs: TrialStepLog[]) => {
+      persistTrial({ stepLogs: logs });
     },
     [persistTrial]
   );
 
   const goToStep = useCallback((idx: number, fromStepIdx?: number) => {
-    if (idx >= 0 && idx < steps.length) {
-      // Complete log for previous step
-      if (fromStepIdx !== undefined && fromStepIdx >= 0) {
-        const prevStep = steps[fromStepIdx];
-        if (prevStep) {
-          const now = new Date().toISOString();
-          const nowMs = new Date(now).getTime();
-          setStepLogs((prev) => {
-            const existing = prev.find((l) => l.stepId === prevStep.id);
-            const startedAt = existing?.startedAt ?? null;
-            const durationActualSec =
-              startedAt
-                ? Math.floor((nowMs - new Date(startedAt).getTime()) / 1000)
-                : null;
-            const updated: TrialStepLog = {
-              stepId: prevStep.id,
-              startedAt: existing?.startedAt ?? null,
-              completedAt: now,
-              durationActualSec,
-              notes: existing?.notes ?? "",
-            };
-            const others = prev.filter((l) => l.stepId !== prevStep.id);
-            return [...others, updated];
-          });
-        }
+    if (idx < 0 || idx >= steps.length) return;
+
+    const now = new Date().toISOString();
+    const nowMs = Date.now();
+
+    // Compute updated logs synchronously so we can persist them immediately
+    let newLogs = [...stepLogs];
+
+    // ── Complete log for the step we are leaving ──
+    if (fromStepIdx !== undefined && fromStepIdx >= 0) {
+      const prevStep = steps[fromStepIdx];
+      if (prevStep) {
+        const existing = newLogs.find((l) => l.stepId === prevStep.id);
+        const startedAt = existing?.startedAt ?? null;
+        const durationActualSec = startedAt
+          ? Math.floor((nowMs - new Date(startedAt).getTime()) / 1000)
+          : null;
+        const completed: TrialStepLog = {
+          stepId: prevStep.id,
+          startedAt: existing?.startedAt ?? null,
+          completedAt: now,
+          durationActualSec,
+          notes: existing?.notes ?? "",
+        };
+        newLogs = [...newLogs.filter((l) => l.stepId !== prevStep.id), completed];
       }
-      setCurrentStepIndex(idx);
-      const nextStep = steps[idx];
-      const durType = nextStep?.duration?.type ?? "fixed";
-      const durMin = nextStep?.duration?.durationMin ?? nextStep?.durationMin;
-      if (durType === "user-confirm") {
-        setTimerSecondsLeft(null);
-      } else if (durMin != null) {
-        setTimerSecondsLeft(durMin * 60);
-      } else {
-        setTimerSecondsLeft(null);
-      }
-      setTimerRunning(false);
-      setStepStartConfirmed(false);
-      setEventConfirmed(false);
-      // Initialize container states for new step's agitation if not already set
-      if (nextStep?.containerAgitation) {
-        setContainerStates((prev) => {
-          const updates: ContainerState[] = [];
-          for (const [cid, agit] of Object.entries(nextStep.containerAgitation!)) {
-            if (!prev.find((c) => c.containerId === cid)) {
-              updates.push({ containerId: cid, temperatureC: null, agitation: agit, contents: [], notes: "" });
-            }
-          }
-          return updates.length ? [...prev, ...updates] : prev;
-        });
-      }
-      // Cancel any pending scroll before scheduling a new one
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-      // Scroll the target step into view after DOM update
-      scrollTimeoutRef.current = setTimeout(() => {
-        const el = stepRefs.current.get(idx);
-        el?.scrollIntoView({ behavior: "smooth", block: "start" });
-        scrollTimeoutRef.current = null;
-      }, SCROLL_INTO_VIEW_DELAY_MS);
     }
-  }, [steps]);
+
+    // ── Start log for the step we are entering (unless it needs manual confirm) ──
+    const nextStep = steps[idx];
+    if (nextStep && !nextStep.requiresStartConfirmation) {
+      const existingNext = newLogs.find((l) => l.stepId === nextStep.id);
+      if (!existingNext?.startedAt) {
+        const started: TrialStepLog = {
+          stepId: nextStep.id,
+          startedAt: now,
+          completedAt: null,
+          durationActualSec: null,
+          notes: existingNext?.notes ?? "",
+        };
+        newLogs = [...newLogs.filter((l) => l.stepId !== nextStep.id), started];
+      }
+    }
+
+    // Persist all at once
+    setStepLogs(newLogs);
+    persistStepLogsToStore(newLogs);
+
+    // Restore stepStartConfirmed from log (so going back to an already-confirmed
+    // step doesn't hide the timer again)
+    const nextLogEntry = newLogs.find((l) => l.stepId === nextStep?.id);
+    const alreadyStarted = !!nextLogEntry?.startedAt;
+    setStepStartConfirmed(alreadyStarted);
+
+    setCurrentStepIndex(idx);
+    const durType = nextStep?.duration?.type ?? "fixed";
+    const durMin = nextStep?.duration?.durationMin ?? nextStep?.durationMin;
+    if (durType === "user-confirm") {
+      setTimerSecondsLeft(null);
+    } else if (durMin != null) {
+      setTimerSecondsLeft(durMin * 60);
+    } else {
+      setTimerSecondsLeft(null);
+    }
+    setTimerRunning(false);
+    setEventConfirmed(false);
+    // Initialize container states for new step's agitation if not already set
+    if (nextStep?.containerAgitation) {
+      setContainerStates((prev) => {
+        const updates: ContainerState[] = [];
+        for (const [cid, agit] of Object.entries(nextStep.containerAgitation!)) {
+          if (!prev.find((c) => c.containerId === cid)) {
+            updates.push({ containerId: cid, temperatureC: null, agitation: agit, contents: [], notes: "" });
+          }
+        }
+        return updates.length ? [...prev, ...updates] : prev;
+      });
+    }
+    // Cancel any pending scroll before scheduling a new one
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    // Scroll the target step into view after DOM update
+    scrollTimeoutRef.current = setTimeout(() => {
+      const el = stepRefs.current.get(idx);
+      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+      scrollTimeoutRef.current = null;
+    }, SCROLL_INTO_VIEW_DELAY_MS);
+  }, [steps, stepLogs, persistStepLogsToStore]);
 
   // ─── Step countdown timer ───
   useEffect(() => {
@@ -343,7 +368,8 @@ export default function TrialRunnerClient({ id }: { id: string }) {
     setStepStartConfirmed(false);
     setEventConfirmed(false);
     const firstStep = steps[0];
-    if (firstStep && !firstStep.requiresStartConfirmation) {
+    const firstStepNeedsConfirm = firstStep?.requiresStartConfirmation ?? false;
+    if (firstStep && !firstStepNeedsConfirm) {
       const log: TrialStepLog = {
         stepId: firstStep.id,
         startedAt: now,
@@ -352,6 +378,7 @@ export default function TrialRunnerClient({ id }: { id: string }) {
         notes: "",
       };
       setStepLogs([log]);
+      setStepStartConfirmed(true);
       persistTrial({ status: "in-progress", startedAt: now, stepLogs: [log] });
     } else {
       persistTrial({ status: "in-progress", startedAt: now });
@@ -362,19 +389,17 @@ export default function TrialRunnerClient({ id }: { id: string }) {
     const now = new Date().toISOString();
     setStepStartConfirmed(true);
     if (currentStep) {
-      setStepLogs((prev) => {
-        const others = prev.filter((l) => l.stepId !== currentStep.id);
-        const log: TrialStepLog = {
-          stepId: currentStep.id,
-          startedAt: now,
-          completedAt: null,
-          durationActualSec: null,
-          notes: "",
-        };
-        const next = [...others, log];
-        persistStepLogs(next, containerStates);
-        return next;
-      });
+      const others = stepLogs.filter((l) => l.stepId !== currentStep.id);
+      const log: TrialStepLog = {
+        stepId: currentStep.id,
+        startedAt: now,
+        completedAt: null,
+        durationActualSec: null,
+        notes: "",
+      };
+      const next = [...others, log];
+      setStepLogs(next);
+      persistStepLogsToStore(next);
     }
   }
 
@@ -498,7 +523,7 @@ export default function TrialRunnerClient({ id }: { id: string }) {
       };
       const others = prev.filter((c) => c.containerId !== containerId);
       const next = [...others, updated];
-      persistStepLogs(stepLogs, next);
+      persistTrial({ containerStates: next });
       return next;
     });
   }

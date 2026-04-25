@@ -803,9 +803,17 @@ export default function TrialDetailClient({ id }: { id: string }) {
             const logs = local.stepLogs || [];
             const protocol = data.protocols.find((p) => p.id === local.protocolId);
             const steps = protocol?.steps ?? [];
+            const stepOrderMap = new Map(steps.map((s) => [s.id, s.order]));
             const stepMap = new Map(steps.map((s) => [s.id, s.name]));
 
-            if (logs.length === 0) {
+            // Sort logs by protocol step order for a stable, readable table
+            const sortedLogs = [...logs].sort((a, b) => {
+              const orderA = stepOrderMap.get(a.stepId) ?? Infinity;
+              const orderB = stepOrderMap.get(b.stepId) ?? Infinity;
+              return orderA - orderB;
+            });
+
+            if (sortedLogs.length === 0) {
               return (
                 <Card>
                   <CardContent className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
@@ -832,16 +840,27 @@ export default function TrialDetailClient({ id }: { id: string }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {logs.map((log, i) => {
+                        {sortedLogs.map((log, i) => {
                           const startedAt = log.startedAt ? new Date(log.startedAt) : null;
                           const completedAt = log.completedAt ? new Date(log.completedAt) : null;
                           const actualMs =
                             startedAt && completedAt
                               ? completedAt.getTime() - startedAt.getTime()
                               : null;
-                          const actualMin = actualMs != null ? Math.round(actualMs / 60000) : null;
+                          // Prefer computed ms from timestamps; fall back to recorded durationActualSec
+                          const durationSec =
+                            actualMs != null
+                              ? Math.round(actualMs / 1000)
+                              : log.durationActualSec;
                           const formatTs = (d: Date | null) =>
                             d ? d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—";
+
+                          const durationDisplay =
+                            durationSec != null
+                              ? durationSec >= 60
+                                ? `${Math.round(durationSec / 60)} min`
+                                : `${durationSec} s`
+                              : null;
 
                           return (
                             <tr key={i} className="border-b last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/50">
@@ -855,9 +874,9 @@ export default function TrialDetailClient({ id }: { id: string }) {
                                 {formatTs(completedAt)}
                               </td>
                               <td className="px-4 py-2 text-right">
-                                {actualMin != null ? (
+                                {durationDisplay != null ? (
                                   <Badge variant="secondary" className="text-xs">
-                                    {actualMin} min
+                                    {durationDisplay}
                                   </Badge>
                                 ) : (
                                   <span className="text-gray-400">—</span>
