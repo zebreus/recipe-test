@@ -28,7 +28,7 @@ import {
 import { generateId } from "@/lib/utils";
 import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
-import type { Formula } from "@/lib/types";
+import type { Formula, FormulaLine } from "@/lib/types";
 import {
   calculateFormulaNutrition,
   calculateMassBalance,
@@ -84,7 +84,7 @@ function FormulasListView() {
     const targetIngredients = data.targetProduct.targetIngredients ?? [];
     const targetMassG = data.targetProduct.targetMassG;
 
-    let ingredientLines: import("@/lib/types").FormulaLine[] = [];
+    let ingredientLines: FormulaLine[] = [];
     if (targetIngredients.length > 0) {
       const withPct = targetIngredients.filter((ti) => ti.targetPct !== undefined);
       const withoutPct = targetIngredients.filter((ti) => ti.targetPct === undefined);
@@ -104,7 +104,7 @@ function FormulasListView() {
       });
     }
 
-    const f: import("@/lib/types").Formula = {
+    const f: Formula = {
       id: generateId(),
       name: newName.trim(),
       description: newDesc.trim(),

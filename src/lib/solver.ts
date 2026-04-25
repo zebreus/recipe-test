@@ -338,9 +338,7 @@ export function checkIngredientOrderCompliance(
 
     for (let i = 0; i < presentTargetIds.length; i++) {
       if (actualOrder[i] !== presentTargetIds[i]) {
-        const expectedId = presentTargetIds[i];
         const actualId = actualOrder[i];
-        const expectedName = ingById.get(expectedId)?.name ?? expectedId;
         const actualName = ingById.get(actualId)?.name ?? actualId;
         // Report order mismatch for the ingredient that is out of place.
         // To avoid duplicate reports, only report the first mismatch.
@@ -356,8 +354,6 @@ export function checkIngredientOrderCompliance(
             actualRank: i + 1,
           });
         }
-        // Suppress further order checks for this ingredient
-        void expectedName;
         break; // report first mismatch only to keep noise low
       }
     }
