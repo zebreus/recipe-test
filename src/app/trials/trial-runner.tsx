@@ -110,6 +110,7 @@ function agitationColor(level: string): string {
 }
 
 const AUTO_ADVANCE_DELAY_MS = 1500;
+const SCROLL_INTO_VIEW_DELAY_MS = 100;
 const DEFAULT_OBSERVATION_CATEGORY = "General";
 
 export default function TrialRunnerClient({ id }: { id: string }) {
@@ -160,6 +161,8 @@ export default function TrialRunnerClient({ id }: { id: string }) {
   const elapsedRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const observationInputRef = useRef<HTMLInputElement>(null);
   const observationLogRef = useRef<HTMLDivElement>(null);
+  const stepRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentStep: ProtocolStep | undefined = steps[currentStepIndex];
 
@@ -186,6 +189,16 @@ export default function TrialRunnerClient({ id }: { id: string }) {
         setTimerSecondsLeft(null);
       }
       setTimerRunning(false);
+      // Cancel any pending scroll before scheduling a new one
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      // Scroll the target step into view after DOM update
+      scrollTimeoutRef.current = setTimeout(() => {
+        const el = stepRefs.current.get(idx);
+        el?.scrollIntoView({ behavior: "smooth", block: "start" });
+        scrollTimeoutRef.current = null;
+      }, SCROLL_INTO_VIEW_DELAY_MS);
     }
   }, [steps]);
 
@@ -258,6 +271,13 @@ export default function TrialRunnerClient({ id }: { id: string }) {
         observationLogRef.current.scrollHeight;
     }
   }, [observations.length]);
+
+  // ─── Cleanup pending scroll timeout on unmount ───
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    };
+  }, []);
 
   // ─── Handlers ───
   function handleStartTrial() {
@@ -362,7 +382,7 @@ export default function TrialRunnerClient({ id }: { id: string }) {
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] lg:h-[calc(100vh-2rem)]">
       {/* ─── Header ─── */}
-      <div className="shrink-0 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3">
+      <div className="shrink-0 border-b border-gray-700 bg-gray-900 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href={`/trials?id=${trial.id}`}>
@@ -371,29 +391,29 @@ export default function TrialRunnerClient({ id }: { id: string }) {
               </Button>
             </Link>
             <div>
-              <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+              <h1 className="text-lg font-bold text-gray-100">
                 Trial #{trial.runNumber} — {protocol.name}
               </h1>
               <div className="flex items-center gap-2 mt-0.5">
                 <Badge
                   className={cn(
                     trialStatus === "in-progress"
-                      ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                      ? "bg-blue-900 text-blue-200"
                       : trialStatus === "completed"
-                        ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                        : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+                        ? "bg-green-900 text-green-200"
+                        : "bg-gray-800 text-gray-200"
                   )}
                   variant="outline"
                 >
                   {trialStatus}
                 </Badge>
                 {isStarted && (
-                  <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                  <span className="text-xs text-gray-400 flex items-center gap-1">
                     <Clock className="h-3 w-3" />
                     Elapsed: {formatTime(elapsedSeconds)}
                   </span>
                 )}
-                <span className="text-xs text-gray-400 dark:text-gray-500">
+                <span className="text-xs text-gray-500">
                   Step {currentStepIndex + 1} / {steps.length}
                 </span>
               </div>
@@ -434,6 +454,13 @@ export default function TrialRunnerClient({ id }: { id: string }) {
             return (
               <div
                 key={step.id}
+                ref={(el) => {
+                  if (el) {
+                    stepRefs.current.set(idx, el);
+                  } else {
+                    stepRefs.current.delete(idx);
+                  }
+                }}
                 className={cn(
                   "relative",
                   // Timeline connector
@@ -443,13 +470,12 @@ export default function TrialRunnerClient({ id }: { id: string }) {
               >
                 <Card
                   className={cn(
-                    "transition-all duration-200 cursor-pointer",
+                    "transition-all duration-200",
                     isCurrent &&
                       "ring-2 ring-indigo-500 dark:ring-indigo-400 shadow-md",
                     isPast && "opacity-60",
                     isFuture && "opacity-40"
                   )}
-                  onClick={() => isStarted && goToStep(idx)}
                 >
                   <CardHeader className="pb-2">
                     <div className="flex items-center gap-3">
@@ -588,9 +614,9 @@ export default function TrialRunnerClient({ id }: { id: string }) {
                         timerSecondsLeft !== null && (() => {
                           const totalSeconds = step.durationMin * 60;
                           return (
-                          <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-3">
+                          <div className="bg-gray-800 rounded-lg p-4 space-y-3">
                             <div className="text-center">
-                              <p className="text-4xl font-mono font-bold text-gray-900 dark:text-gray-100">
+                              <p className="text-4xl font-mono font-bold text-gray-100">
                                 {formatTime(timerSecondsLeft)}
                               </p>
                               <Progress
@@ -641,7 +667,7 @@ export default function TrialRunnerClient({ id }: { id: string }) {
                               </Button>
                             </div>
                             {timerSecondsLeft === 0 && (
-                              <p className="text-center text-sm font-medium text-green-600 dark:text-green-400">
+                              <p className="text-center text-sm font-medium text-green-400">
                                 ✓ Timer complete!
                               </p>
                             )}
@@ -651,7 +677,7 @@ export default function TrialRunnerClient({ id }: { id: string }) {
 
                       {/* Step navigation */}
                       {isStarted && (
-                        <div className="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <div className="flex justify-between pt-2 border-t border-gray-700">
                           <Button
                             variant="outline"
                             size="sm"
@@ -696,17 +722,17 @@ export default function TrialRunnerClient({ id }: { id: string }) {
           })}
         </div>
 
-        {/* ─── Observation Panel ─── */}
+        {/* ─── Observation Panel (desktop: side panel) ─── */}
         <div
           className={cn(
-            "shrink-0 border-t lg:border-t-0 lg:border-l border-gray-200 dark:border-gray-700",
-            "bg-gray-50 dark:bg-gray-900",
-            "flex flex-col",
-            "h-64 lg:h-auto lg:w-80 xl:w-96"
+            "hidden lg:flex shrink-0 lg:border-l border-gray-700",
+            "bg-gray-900",
+            "flex-col",
+            "lg:w-80 xl:w-96"
           )}
         >
-          <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-            <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          <div className="px-4 py-2 border-b border-gray-700">
+            <h2 className="text-sm font-semibold text-gray-100">
               Observation Log ({observations.length})
             </h2>
           </div>
@@ -717,7 +743,7 @@ export default function TrialRunnerClient({ id }: { id: string }) {
             className="flex-1 overflow-y-auto p-3 space-y-2"
           >
             {observations.length === 0 && (
-              <p className="text-xs text-gray-400 dark:text-gray-500 text-center py-4">
+              <p className="text-xs text-gray-500 text-center py-4">
                 No observations yet. Start logging as you work through the
                 steps.
               </p>
@@ -727,17 +753,17 @@ export default function TrialRunnerClient({ id }: { id: string }) {
               return (
                 <div
                   key={idx}
-                  className="bg-white dark:bg-gray-800 rounded-md px-3 py-2 text-sm border border-gray-200 dark:border-gray-700"
+                  className="bg-gray-800 rounded-md px-3 py-2 text-sm border border-gray-700"
                 >
                   <div className="flex items-center justify-between mb-0.5">
                     <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                       {step ? step.name : obs.category}
                     </Badge>
-                    <span className="text-[10px] text-gray-400 dark:text-gray-500">
+                    <span className="text-[10px] text-gray-500">
                       {formatDateTime(obs.timestamp)}
                     </span>
                   </div>
-                  <p className="text-gray-700 dark:text-gray-300">
+                  <p className="text-gray-300">
                     {obs.value}
                   </p>
                 </div>
@@ -745,9 +771,9 @@ export default function TrialRunnerClient({ id }: { id: string }) {
             })}
           </div>
 
-          {/* Observation input */}
+          {/* Observation input (desktop) */}
           {isStarted && (
-            <div className="shrink-0 p-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+            <div className="shrink-0 p-3 border-t border-gray-700 bg-gray-900">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -772,7 +798,7 @@ export default function TrialRunnerClient({ id }: { id: string }) {
                 </Button>
               </form>
               {currentStep && (
-                <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">
+                <p className="text-[10px] text-gray-500 mt-1">
                   Step: {currentStep.name}
                 </p>
               )}
@@ -780,6 +806,40 @@ export default function TrialRunnerClient({ id }: { id: string }) {
           )}
         </div>
       </div>
+
+      {/* ─── Mobile Observation Input (sticky bottom bar) ─── */}
+      {isStarted && (
+        <div className="lg:hidden shrink-0 border-t border-gray-700 bg-gray-900 px-3 py-2">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleAddObservation();
+            }}
+            className="flex gap-2 items-center"
+          >
+            <Input
+              ref={observationInputRef}
+              value={observationText}
+              onChange={(e) => setObservationText(e.target.value)}
+              placeholder="Log an observation..."
+              className="flex-1 h-10 text-sm"
+            />
+            <Button
+              type="submit"
+              size="icon"
+              className="h-10 w-10 shrink-0"
+              disabled={!observationText.trim()}
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </form>
+          {currentStep && (
+            <p className="text-[10px] text-gray-500 mt-0.5">
+              Step: {currentStep.name} · {observations.length} observation{observations.length !== 1 ? "s" : ""}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
