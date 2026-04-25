@@ -1,0 +1,1242 @@
+{
+  "project": {
+    "id": "single-project",
+    "name": "Müller Clone Reverse Engineering",
+    "createdAt": "2026-04-25T14:04:14.058Z",
+    "updatedAt": "2026-04-25T14:04:14.059Z"
+  },
+  "targetProduct": {
+    "name": "Müller Rice – Original",
+    "description": "Creamy rice pudding dessert. Thick, spoonable texture with soft rice grains in a smooth, sweet dairy base.",
+    "targetMassG": 200,
+    "targetVolumeMl": 190,
+    "observedAttributes": {
+      "texture": [
+        "Creamy",
+        "Thick",
+        "Spoonable",
+        "Soft grains"
+      ],
+      "flavor": [
+        "Sweet",
+        "Milky",
+        "Vanilla hint"
+      ],
+      "color": [
+        "Off-white",
+        "Creamy"
+      ],
+      "packaging": [
+        "Plastic pot",
+        "Foil sealed",
+        "Chilled"
+      ]
+    },
+    "targetComposition": {
+      "water_pct": 62,
+      "fat_pct": 3,
+      "protein_pct": 3.5,
+      "sugar_pct": 12,
+      "starch_pct": 15,
+      "salt_pct": 0.15,
+      "hydrocolloid_pct": 0.35,
+      "other_pct": 4
+    }
+  },
+  "ingredients": [
+    {
+      "id": "ing-1",
+      "name": "Whole Milk",
+      "category": "Dairy",
+      "density_g_ml": 1.03,
+      "composition": {
+        "water_pct": 87,
+        "fat_pct": 3.5,
+        "protein_pct": 3.3,
+        "sugar_pct": 4.8,
+        "starch_pct": 0,
+        "salt_pct": 0.1,
+        "hydrocolloid_pct": 0,
+        "other_pct": 1.3
+      },
+      "source": "",
+      "confidence": 0.9,
+      "costPerKg": 1.2,
+      "substitutions": [],
+      "constraints": [],
+      "notes": "",
+      "createdAt": "2026-04-25T14:04:14.059Z",
+      "updatedAt": "2026-04-25T14:04:14.059Z"
+    },
+    {
+      "id": "ing-2",
+      "name": "Short Grain Rice",
+      "category": "Grain",
+      "density_g_ml": 0.85,
+      "composition": {
+        "water_pct": 12,
+        "fat_pct": 0.6,
+        "protein_pct": 6.7,
+        "sugar_pct": 0.1,
+        "starch_pct": 78,
+        "salt_pct": 0,
+        "hydrocolloid_pct": 0,
+        "other_pct": 2.6
+      },
+      "source": "",
+      "confidence": 0.9,
+      "costPerKg": 2.5,
+      "substitutions": [],
+      "constraints": [],
+      "notes": "",
+      "createdAt": "2026-04-25T14:04:14.059Z",
+      "updatedAt": "2026-04-25T14:04:14.059Z"
+    },
+    {
+      "id": "ing-3",
+      "name": "Granulated Sugar",
+      "category": "Sugar & Sweetener",
+      "density_g_ml": 1.55,
+      "composition": {
+        "water_pct": 0.1,
+        "fat_pct": 0,
+        "protein_pct": 0,
+        "sugar_pct": 99.9,
+        "starch_pct": 0,
+        "salt_pct": 0,
+        "hydrocolloid_pct": 0,
+        "other_pct": 0
+      },
+      "source": "",
+      "confidence": 0.9,
+      "costPerKg": 0.9,
+      "substitutions": [],
+      "constraints": [],
+      "notes": "",
+      "createdAt": "2026-04-25T14:04:14.059Z",
+      "updatedAt": "2026-04-25T14:04:14.059Z"
+    },
+    {
+      "id": "ing-4",
+      "name": "Heavy Cream",
+      "category": "Dairy",
+      "density_g_ml": 0.99,
+      "composition": {
+        "water_pct": 58,
+        "fat_pct": 36,
+        "protein_pct": 2.1,
+        "sugar_pct": 2.8,
+        "starch_pct": 0,
+        "salt_pct": 0.05,
+        "hydrocolloid_pct": 0,
+        "other_pct": 1.05
+      },
+      "source": "",
+      "confidence": 0.9,
+      "costPerKg": 6.5,
+      "substitutions": [],
+      "constraints": [],
+      "notes": "",
+      "createdAt": "2026-04-25T14:04:14.059Z",
+      "updatedAt": "2026-04-25T14:04:14.059Z"
+    },
+    {
+      "id": "ing-5",
+      "name": "Modified Starch",
+      "category": "Starch",
+      "density_g_ml": 0.6,
+      "composition": {
+        "water_pct": 10,
+        "fat_pct": 0,
+        "protein_pct": 0.3,
+        "sugar_pct": 0,
+        "starch_pct": 88,
+        "salt_pct": 0,
+        "hydrocolloid_pct": 0,
+        "other_pct": 1.7
+      },
+      "source": "",
+      "confidence": 0.9,
+      "costPerKg": 4,
+      "substitutions": [],
+      "constraints": [],
+      "notes": "",
+      "createdAt": "2026-04-25T14:04:14.059Z",
+      "updatedAt": "2026-04-25T14:04:14.059Z"
+    },
+    {
+      "id": "ing-6",
+      "name": "Carrageenan",
+      "category": "Hydrocolloid",
+      "density_g_ml": 0.65,
+      "composition": {
+        "water_pct": 10,
+        "fat_pct": 0,
+        "protein_pct": 0,
+        "sugar_pct": 0,
+        "starch_pct": 0,
+        "salt_pct": 0,
+        "hydrocolloid_pct": 85,
+        "other_pct": 5
+      },
+      "source": "",
+      "confidence": 0.9,
+      "costPerKg": 35,
+      "substitutions": [],
+      "constraints": [],
+      "notes": "",
+      "createdAt": "2026-04-25T14:04:14.059Z",
+      "updatedAt": "2026-04-25T14:04:14.059Z"
+    },
+    {
+      "id": "ing-7",
+      "name": "Vanilla Extract",
+      "category": "Flavor",
+      "density_g_ml": 0.88,
+      "composition": {
+        "water_pct": 52,
+        "fat_pct": 0,
+        "protein_pct": 0,
+        "sugar_pct": 12,
+        "starch_pct": 0,
+        "salt_pct": 0,
+        "hydrocolloid_pct": 0,
+        "other_pct": 36
+      },
+      "source": "",
+      "confidence": 0.9,
+      "costPerKg": 120,
+      "substitutions": [],
+      "constraints": [],
+      "notes": "",
+      "createdAt": "2026-04-25T14:04:14.059Z",
+      "updatedAt": "2026-04-25T14:04:14.059Z"
+    },
+    {
+      "id": "ing-8",
+      "name": "Salt",
+      "category": "Salt",
+      "density_g_ml": 2.16,
+      "composition": {
+        "water_pct": 0,
+        "fat_pct": 0,
+        "protein_pct": 0,
+        "sugar_pct": 0,
+        "starch_pct": 0,
+        "salt_pct": 100,
+        "hydrocolloid_pct": 0,
+        "other_pct": 0
+      },
+      "source": "",
+      "confidence": 0.9,
+      "costPerKg": 0.5,
+      "substitutions": [],
+      "constraints": [],
+      "notes": "",
+      "createdAt": "2026-04-25T14:04:14.059Z",
+      "updatedAt": "2026-04-25T14:04:14.059Z"
+    }
+  ],
+  "formulas": [
+    {
+      "id": "formula-1",
+      "name": "Candidate A – Milk-heavy",
+      "description": "High milk ratio with cream for richness",
+      "version": 1,
+      "targetMassG": 200,
+      "ingredientLines": [
+        {
+          "ingredientId": "ing-1",
+          "massG": 130,
+          "locked": false
+        },
+        {
+          "ingredientId": "ing-2",
+          "massG": 35,
+          "locked": false
+        },
+        {
+          "ingredientId": "ing-3",
+          "massG": 14,
+          "locked": false
+        },
+        {
+          "ingredientId": "ing-4",
+          "massG": 10,
+          "locked": false
+        },
+        {
+          "ingredientId": "ing-5",
+          "massG": 4,
+          "locked": false
+        },
+        {
+          "ingredientId": "ing-6",
+          "massG": 0.7,
+          "locked": false
+        },
+        {
+          "ingredientId": "ing-7",
+          "massG": 1,
+          "locked": false
+        },
+        {
+          "ingredientId": "ing-8",
+          "massG": 0.3,
+          "locked": false
+        }
+      ],
+      "calculatedComponents": {
+        "water_g": 124.10399999999998,
+        "fat_g": 8.36,
+        "protein_g": 6.856999999999999,
+        "sugar_g": 20.661000000000005,
+        "starch_g": 30.82,
+        "salt_g": 0.435,
+        "hydrocolloid_g": 0.595,
+        "other_g": 3.168,
+        "total_g": 195
+      },
+      "massBalance": {
+        "totalInputG": 195,
+        "totalOutputG": 200,
+        "lossG": -5,
+        "lossPct": -2.56,
+        "waterAdjustmentG": 5
+      },
+      "confidence": 0.8564,
+      "notes": "Initial milk-heavy formulation",
+      "createdAt": "2026-04-25T14:04:14.059Z",
+      "updatedAt": "2026-04-25T14:04:14.059Z"
+    }
+  ],
+  "protocols": [
+    {
+      "id": "protocol-1",
+      "name": "Standard Batch Cook",
+      "category": "batch-cook",
+      "description": "Traditional rice pudding method: simmer rice in milk, add sugar/cream, cool.",
+      "version": 1,
+      "steps": [
+        {
+          "id": "step-1",
+          "order": 1,
+          "name": "Rinse Rice",
+          "description": "Rinse short grain rice under cold water",
+          "temperatureC": 15,
+          "durationMin": 2,
+          "agitationLevel": "low",
+          "additionIngredients": [
+            "ing-2"
+          ],
+          "holdConditions": "",
+          "expectedEffects": [
+            "Remove surface starch"
+          ]
+        },
+        {
+          "id": "step-2",
+          "order": 2,
+          "name": "Combine Milk & Rice",
+          "description": "Add rinsed rice to whole milk in pot",
+          "temperatureC": 20,
+          "durationMin": 1,
+          "agitationLevel": "low",
+          "additionIngredients": [
+            "ing-1"
+          ],
+          "holdConditions": "",
+          "expectedEffects": [
+            "Hydration begins"
+          ]
+        },
+        {
+          "id": "step-3",
+          "order": 3,
+          "name": "Bring to Simmer",
+          "description": "Heat to 85°C, stirring frequently",
+          "temperatureC": 85,
+          "durationMin": 10,
+          "agitationLevel": "medium",
+          "additionIngredients": [],
+          "holdConditions": "Maintain gentle simmer",
+          "expectedEffects": [
+            "Starch gelatinization",
+            "Grain softening",
+            "Milk protein denaturation"
+          ]
+        },
+        {
+          "id": "step-4",
+          "order": 4,
+          "name": "Add Sugar & Starch",
+          "description": "Add sugar and modified starch, stir well",
+          "temperatureC": 85,
+          "durationMin": 2,
+          "agitationLevel": "high",
+          "additionIngredients": [
+            "ing-3",
+            "ing-5"
+          ],
+          "holdConditions": "",
+          "expectedEffects": [
+            "Sweetening",
+            "Thickening from modified starch"
+          ]
+        },
+        {
+          "id": "step-5",
+          "order": 5,
+          "name": "Cook & Hold",
+          "description": "Continue cooking at 85°C until rice is fully tender and base is thick",
+          "temperatureC": 85,
+          "durationMin": 20,
+          "agitationLevel": "medium",
+          "additionIngredients": [],
+          "holdConditions": "Maintain 85°C ± 2°C",
+          "expectedEffects": [
+            "Full starch hydration",
+            "Viscosity development",
+            "Grain softening complete"
+          ]
+        },
+        {
+          "id": "step-6",
+          "order": 6,
+          "name": "Add Cream & Hydrocolloid",
+          "description": "Off heat slightly, add cream, carrageenan, and vanilla",
+          "temperatureC": 75,
+          "durationMin": 3,
+          "agitationLevel": "medium",
+          "additionIngredients": [
+            "ing-4",
+            "ing-6",
+            "ing-7"
+          ],
+          "holdConditions": "",
+          "expectedEffects": [
+            "Fat enrichment",
+            "Gel network formation",
+            "Flavor addition"
+          ]
+        },
+        {
+          "id": "step-7",
+          "order": 7,
+          "name": "Cool",
+          "description": "Cool to 20°C in ice bath or blast chiller",
+          "temperatureC": 20,
+          "durationMin": 30,
+          "agitationLevel": "low",
+          "additionIngredients": [],
+          "holdConditions": "Cool as quickly as possible",
+          "expectedEffects": [
+            "Gel set",
+            "Fat crystallization",
+            "Texture firming"
+          ]
+        }
+      ],
+      "expectedEffects": [
+        "Creamy pudding texture",
+        "Soft rice grains",
+        "Stable gel"
+      ],
+      "riskFlags": [
+        "Overcooking dries out",
+        "Hydrocolloid must dissolve fully"
+      ],
+      "notes": "",
+      "createdAt": "2026-04-25T14:04:14.059Z",
+      "updatedAt": "2026-04-25T14:04:14.059Z"
+    },
+    {
+      "id": "protocol-2",
+      "name": "Pressure Cook Method",
+      "category": "heat-first",
+      "description": "Pressure cook rice in milk for faster starch release, then finish with cream and hydrocolloid.",
+      "version": 1,
+      "steps": [
+        {
+          "id": "step-p2-1",
+          "order": 1,
+          "name": "Combine Ingredients",
+          "description": "Add rice, milk, and sugar to pressure cooker",
+          "temperatureC": 20,
+          "durationMin": 2,
+          "agitationLevel": "low",
+          "additionIngredients": [
+            "ing-2",
+            "ing-1",
+            "ing-3"
+          ],
+          "holdConditions": "",
+          "expectedEffects": [
+            "Pre-mix before pressurizing"
+          ]
+        },
+        {
+          "id": "step-p2-2",
+          "order": 2,
+          "name": "Pressure Cook",
+          "description": "Cook at high pressure (15 psi) for 8 minutes",
+          "temperatureC": 121,
+          "durationMin": 8,
+          "agitationLevel": "none",
+          "additionIngredients": [],
+          "holdConditions": "15 psi, sealed",
+          "expectedEffects": [
+            "Rapid starch gelatinization",
+            "Complete grain softening",
+            "Accelerated Maillard reaction"
+          ]
+        },
+        {
+          "id": "step-p2-3",
+          "order": 3,
+          "name": "Natural Release",
+          "description": "Allow pressure to release naturally for 10 minutes",
+          "temperatureC": 100,
+          "durationMin": 10,
+          "agitationLevel": "none",
+          "additionIngredients": [],
+          "holdConditions": "Do not open valve",
+          "expectedEffects": [
+            "Gradual pressure drop",
+            "Continued starch hydration"
+          ]
+        },
+        {
+          "id": "step-p2-4",
+          "order": 4,
+          "name": "Add Starch & Hydrocolloid",
+          "description": "Transfer to pot, add modified starch and carrageenan",
+          "temperatureC": 85,
+          "durationMin": 3,
+          "agitationLevel": "high",
+          "additionIngredients": [
+            "ing-5",
+            "ing-6"
+          ],
+          "holdConditions": "",
+          "expectedEffects": [
+            "Thickening",
+            "Gel network formation"
+          ]
+        },
+        {
+          "id": "step-p2-5",
+          "order": 5,
+          "name": "Finish & Cool",
+          "description": "Add cream and vanilla, cool rapidly",
+          "temperatureC": 20,
+          "durationMin": 25,
+          "agitationLevel": "low",
+          "additionIngredients": [
+            "ing-4",
+            "ing-7"
+          ],
+          "holdConditions": "Cool to <25°C within 30 min",
+          "expectedEffects": [
+            "Fat enrichment",
+            "Flavor addition",
+            "Gel set"
+          ]
+        }
+      ],
+      "expectedEffects": [
+        "Faster cook time",
+        "Softer grains",
+        "Slightly darker color from Maillard"
+      ],
+      "riskFlags": [
+        "Over-pressure risk",
+        "May scorch on bottom",
+        "Grain may be too soft / mushy"
+      ],
+      "notes": "Alternative process for comparison with standard batch cook",
+      "createdAt": "2026-04-25T14:04:14.059Z",
+      "updatedAt": "2026-04-25T14:04:14.059Z"
+    }
+  ],
+  "trials": [
+    {
+      "id": "trial-1",
+      "formulaId": "formula-1",
+      "protocolId": "protocol-1",
+      "runNumber": 1,
+      "status": "completed",
+      "actualParameters": {
+        "Final temp": "84°C",
+        "Cook time": "22 min",
+        "Cool time": "35 min"
+      },
+      "observations": [
+        {
+          "category": "Texture",
+          "value": "Slightly thin, rice grains a bit firm",
+          "timestamp": "2026-04-25T14:04:14.059Z"
+        },
+        {
+          "category": "Appearance",
+          "value": "Good color, slight skin on top",
+          "timestamp": "2026-04-25T14:04:14.059Z"
+        }
+      ],
+      "measurements": [
+        {
+          "name": "Final viscosity",
+          "value": 3200,
+          "unit": "mPa·s"
+        },
+        {
+          "name": "pH",
+          "value": 6.4,
+          "unit": ""
+        },
+        {
+          "name": "Total solids",
+          "value": 34.5,
+          "unit": "%"
+        }
+      ],
+      "scores": [
+        {
+          "name": "Viscosity",
+          "score": 6,
+          "weight": 0.15,
+          "notes": "A bit thin"
+        },
+        {
+          "name": "Spoonability",
+          "score": 7,
+          "weight": 0.1,
+          "notes": "Reasonable"
+        },
+        {
+          "name": "Grain Softness",
+          "score": 5,
+          "weight": 0.1,
+          "notes": "Needs longer cook"
+        },
+        {
+          "name": "Creaminess",
+          "score": 6,
+          "weight": 0.15,
+          "notes": "Needs more cream"
+        },
+        {
+          "name": "Phase Separation",
+          "score": 8,
+          "weight": 0.1,
+          "notes": "Stable"
+        },
+        {
+          "name": "Sweetness Balance",
+          "score": 7,
+          "weight": 0.1,
+          "notes": "Slightly under"
+        },
+        {
+          "name": "Aroma Match",
+          "score": 5,
+          "weight": 0.1,
+          "notes": "Weak vanilla"
+        },
+        {
+          "name": "Aftertaste",
+          "score": 7,
+          "weight": 0.1,
+          "notes": "Clean"
+        },
+        {
+          "name": "Appearance",
+          "score": 6,
+          "weight": 0.1,
+          "notes": "Slight skin"
+        }
+      ],
+      "similarityScore": 63,
+      "attachmentIds": [],
+      "notes": "First attempt. Promising but needs iteration on cook time and cream ratio.",
+      "startedAt": "2026-04-25T14:04:14.059Z",
+      "completedAt": "2026-04-25T14:04:14.059Z",
+      "createdAt": "2026-04-25T14:04:14.059Z",
+      "updatedAt": "2026-04-25T14:04:14.059Z"
+    },
+    {
+      "id": "trial-2",
+      "formulaId": "formula-1",
+      "protocolId": "protocol-1",
+      "runNumber": 2,
+      "status": "completed",
+      "actualParameters": {
+        "Final temp": "85°C",
+        "Cook time": "25 min",
+        "Cool time": "32 min"
+      },
+      "observations": [
+        {
+          "category": "Texture",
+          "value": "Better viscosity, rice softer",
+          "timestamp": "2026-04-25T14:04:14.059Z"
+        },
+        {
+          "category": "Appearance",
+          "value": "No skin, even color",
+          "timestamp": "2026-04-25T14:04:14.059Z"
+        }
+      ],
+      "measurements": [
+        {
+          "name": "Final viscosity",
+          "value": 3800,
+          "unit": "mPa·s"
+        },
+        {
+          "name": "pH",
+          "value": 6.3,
+          "unit": ""
+        },
+        {
+          "name": "Total solids",
+          "value": 35.1,
+          "unit": "%"
+        }
+      ],
+      "scores": [
+        {
+          "name": "Viscosity",
+          "score": 7,
+          "weight": 0.15,
+          "notes": "Improved"
+        },
+        {
+          "name": "Spoonability",
+          "score": 7,
+          "weight": 0.1,
+          "notes": "Good"
+        },
+        {
+          "name": "Grain Softness",
+          "score": 7,
+          "weight": 0.1,
+          "notes": "Better with longer cook"
+        },
+        {
+          "name": "Creaminess",
+          "score": 6,
+          "weight": 0.15,
+          "notes": "Still needs more cream"
+        },
+        {
+          "name": "Phase Separation",
+          "score": 8,
+          "weight": 0.1,
+          "notes": "Stable"
+        },
+        {
+          "name": "Sweetness Balance",
+          "score": 7,
+          "weight": 0.1,
+          "notes": "Good"
+        },
+        {
+          "name": "Aroma Match",
+          "score": 5,
+          "weight": 0.1,
+          "notes": "Vanilla still weak"
+        },
+        {
+          "name": "Aftertaste",
+          "score": 7,
+          "weight": 0.1,
+          "notes": "Clean"
+        },
+        {
+          "name": "Appearance",
+          "score": 7,
+          "weight": 0.1,
+          "notes": "Good"
+        }
+      ],
+      "similarityScore": 67,
+      "attachmentIds": [],
+      "notes": "Replicate 2 of batch cook process. Longer cook time improved grain softness.",
+      "startedAt": "2026-04-25T14:04:14.059Z",
+      "completedAt": "2026-04-25T14:04:14.059Z",
+      "createdAt": "2026-04-25T14:04:14.059Z",
+      "updatedAt": "2026-04-25T14:04:14.059Z"
+    },
+    {
+      "id": "trial-3",
+      "formulaId": "formula-1",
+      "protocolId": "protocol-1",
+      "runNumber": 3,
+      "status": "completed",
+      "actualParameters": {
+        "Final temp": "85°C",
+        "Cook time": "24 min",
+        "Cool time": "33 min"
+      },
+      "observations": [
+        {
+          "category": "Texture",
+          "value": "Consistent with trial 2",
+          "timestamp": "2026-04-25T14:04:14.059Z"
+        },
+        {
+          "category": "Appearance",
+          "value": "Good color, smooth surface",
+          "timestamp": "2026-04-25T14:04:14.059Z"
+        }
+      ],
+      "measurements": [
+        {
+          "name": "Final viscosity",
+          "value": 3650,
+          "unit": "mPa·s"
+        },
+        {
+          "name": "pH",
+          "value": 6.35,
+          "unit": ""
+        },
+        {
+          "name": "Total solids",
+          "value": 34.8,
+          "unit": "%"
+        }
+      ],
+      "scores": [
+        {
+          "name": "Viscosity",
+          "score": 7,
+          "weight": 0.15,
+          "notes": "Consistent"
+        },
+        {
+          "name": "Spoonability",
+          "score": 7,
+          "weight": 0.1,
+          "notes": "Reproducible"
+        },
+        {
+          "name": "Grain Softness",
+          "score": 6,
+          "weight": 0.1,
+          "notes": "Slightly less than trial 2"
+        },
+        {
+          "name": "Creaminess",
+          "score": 6,
+          "weight": 0.15,
+          "notes": "Same as before"
+        },
+        {
+          "name": "Phase Separation",
+          "score": 8,
+          "weight": 0.1,
+          "notes": "Stable"
+        },
+        {
+          "name": "Sweetness Balance",
+          "score": 7,
+          "weight": 0.1,
+          "notes": "Good"
+        },
+        {
+          "name": "Aroma Match",
+          "score": 5,
+          "weight": 0.1,
+          "notes": "Consistent"
+        },
+        {
+          "name": "Aftertaste",
+          "score": 7,
+          "weight": 0.1,
+          "notes": "Clean"
+        },
+        {
+          "name": "Appearance",
+          "score": 7,
+          "weight": 0.1,
+          "notes": "Good"
+        }
+      ],
+      "similarityScore": 65,
+      "attachmentIds": [],
+      "notes": "Replicate 3 of batch cook. Good reproducibility with trials 1-2.",
+      "startedAt": "2026-04-25T14:04:14.059Z",
+      "completedAt": "2026-04-25T14:04:14.059Z",
+      "createdAt": "2026-04-25T14:04:14.059Z",
+      "updatedAt": "2026-04-25T14:04:14.059Z"
+    },
+    {
+      "id": "trial-4",
+      "formulaId": "formula-1",
+      "protocolId": "protocol-2",
+      "runNumber": 4,
+      "status": "completed",
+      "actualParameters": {
+        "Pressure": "15 psi",
+        "Cook time": "8 min",
+        "Release time": "12 min",
+        "Cool time": "28 min"
+      },
+      "observations": [
+        {
+          "category": "Texture",
+          "value": "Very soft grains, almost mushy",
+          "timestamp": "2026-04-25T14:04:14.059Z"
+        },
+        {
+          "category": "Appearance",
+          "value": "Slightly darker color than batch cook",
+          "timestamp": "2026-04-25T14:04:14.059Z"
+        },
+        {
+          "category": "Process",
+          "value": "Faster overall, less stirring needed",
+          "timestamp": "2026-04-25T14:04:14.059Z"
+        }
+      ],
+      "measurements": [
+        {
+          "name": "Final viscosity",
+          "value": 4200,
+          "unit": "mPa·s"
+        },
+        {
+          "name": "pH",
+          "value": 6.2,
+          "unit": ""
+        },
+        {
+          "name": "Total solids",
+          "value": 36,
+          "unit": "%"
+        }
+      ],
+      "scores": [
+        {
+          "name": "Viscosity",
+          "score": 8,
+          "weight": 0.15,
+          "notes": "Good thickness"
+        },
+        {
+          "name": "Spoonability",
+          "score": 8,
+          "weight": 0.1,
+          "notes": "Excellent"
+        },
+        {
+          "name": "Grain Softness",
+          "score": 9,
+          "weight": 0.1,
+          "notes": "Very soft, borderline too soft"
+        },
+        {
+          "name": "Creaminess",
+          "score": 7,
+          "weight": 0.15,
+          "notes": "Better than batch cook"
+        },
+        {
+          "name": "Phase Separation",
+          "score": 7,
+          "weight": 0.1,
+          "notes": "Slight whey separation"
+        },
+        {
+          "name": "Sweetness Balance",
+          "score": 7,
+          "weight": 0.1,
+          "notes": "Good"
+        },
+        {
+          "name": "Aroma Match",
+          "score": 4,
+          "weight": 0.1,
+          "notes": "Pressure cooking muted vanilla"
+        },
+        {
+          "name": "Aftertaste",
+          "score": 6,
+          "weight": 0.1,
+          "notes": "Slight cooked milk note"
+        },
+        {
+          "name": "Appearance",
+          "score": 5,
+          "weight": 0.1,
+          "notes": "Darker than target"
+        }
+      ],
+      "similarityScore": 68,
+      "attachmentIds": [],
+      "notes": "First pressure cook trial. Grains very soft. Aroma and color need work.",
+      "startedAt": "2026-04-25T14:04:14.059Z",
+      "completedAt": "2026-04-25T14:04:14.059Z",
+      "createdAt": "2026-04-25T14:04:14.059Z",
+      "updatedAt": "2026-04-25T14:04:14.059Z"
+    },
+    {
+      "id": "trial-5",
+      "formulaId": "formula-1",
+      "protocolId": "protocol-2",
+      "runNumber": 5,
+      "status": "completed",
+      "actualParameters": {
+        "Pressure": "15 psi",
+        "Cook time": "7 min",
+        "Release time": "10 min",
+        "Cool time": "26 min"
+      },
+      "observations": [
+        {
+          "category": "Texture",
+          "value": "Better grain texture with shorter cook",
+          "timestamp": "2026-04-25T14:04:14.059Z"
+        },
+        {
+          "category": "Appearance",
+          "value": "Still slightly dark",
+          "timestamp": "2026-04-25T14:04:14.059Z"
+        }
+      ],
+      "measurements": [
+        {
+          "name": "Final viscosity",
+          "value": 3900,
+          "unit": "mPa·s"
+        },
+        {
+          "name": "pH",
+          "value": 6.25,
+          "unit": ""
+        },
+        {
+          "name": "Total solids",
+          "value": 35.5,
+          "unit": "%"
+        }
+      ],
+      "scores": [
+        {
+          "name": "Viscosity",
+          "score": 7,
+          "weight": 0.15,
+          "notes": "Slightly less than trial 4"
+        },
+        {
+          "name": "Spoonability",
+          "score": 8,
+          "weight": 0.1,
+          "notes": "Good"
+        },
+        {
+          "name": "Grain Softness",
+          "score": 8,
+          "weight": 0.1,
+          "notes": "Better balance"
+        },
+        {
+          "name": "Creaminess",
+          "score": 7,
+          "weight": 0.15,
+          "notes": "Good"
+        },
+        {
+          "name": "Phase Separation",
+          "score": 7,
+          "weight": 0.1,
+          "notes": "Slight separation"
+        },
+        {
+          "name": "Sweetness Balance",
+          "score": 7,
+          "weight": 0.1,
+          "notes": "OK"
+        },
+        {
+          "name": "Aroma Match",
+          "score": 5,
+          "weight": 0.1,
+          "notes": "Slightly better"
+        },
+        {
+          "name": "Aftertaste",
+          "score": 6,
+          "weight": 0.1,
+          "notes": "Cooked note reduced"
+        },
+        {
+          "name": "Appearance",
+          "score": 6,
+          "weight": 0.1,
+          "notes": "Improved"
+        }
+      ],
+      "similarityScore": 67,
+      "attachmentIds": [],
+      "notes": "Replicate 2 of pressure cook. Reduced cook time by 1 min improved grain texture.",
+      "startedAt": "2026-04-25T14:04:14.059Z",
+      "completedAt": "2026-04-25T14:04:14.059Z",
+      "createdAt": "2026-04-25T14:04:14.059Z",
+      "updatedAt": "2026-04-25T14:04:14.059Z"
+    },
+    {
+      "id": "trial-6",
+      "formulaId": "formula-1",
+      "protocolId": "protocol-2",
+      "runNumber": 6,
+      "status": "completed",
+      "actualParameters": {
+        "Pressure": "15 psi",
+        "Cook time": "7 min",
+        "Release time": "11 min",
+        "Cool time": "27 min"
+      },
+      "observations": [
+        {
+          "category": "Texture",
+          "value": "Good consistency with trial 5",
+          "timestamp": "2026-04-25T14:04:14.059Z"
+        },
+        {
+          "category": "Appearance",
+          "value": "Acceptable color",
+          "timestamp": "2026-04-25T14:04:14.059Z"
+        }
+      ],
+      "measurements": [
+        {
+          "name": "Final viscosity",
+          "value": 4000,
+          "unit": "mPa·s"
+        },
+        {
+          "name": "pH",
+          "value": 6.22,
+          "unit": ""
+        },
+        {
+          "name": "Total solids",
+          "value": 35.7,
+          "unit": "%"
+        }
+      ],
+      "scores": [
+        {
+          "name": "Viscosity",
+          "score": 8,
+          "weight": 0.15,
+          "notes": "Good"
+        },
+        {
+          "name": "Spoonability",
+          "score": 8,
+          "weight": 0.1,
+          "notes": "Good"
+        },
+        {
+          "name": "Grain Softness",
+          "score": 8,
+          "weight": 0.1,
+          "notes": "Consistent"
+        },
+        {
+          "name": "Creaminess",
+          "score": 7,
+          "weight": 0.15,
+          "notes": "Good"
+        },
+        {
+          "name": "Phase Separation",
+          "score": 7,
+          "weight": 0.1,
+          "notes": "Same slight separation"
+        },
+        {
+          "name": "Sweetness Balance",
+          "score": 7,
+          "weight": 0.1,
+          "notes": "Good"
+        },
+        {
+          "name": "Aroma Match",
+          "score": 5,
+          "weight": 0.1,
+          "notes": "Consistent with trial 5"
+        },
+        {
+          "name": "Aftertaste",
+          "score": 6,
+          "weight": 0.1,
+          "notes": "Slight cooked note"
+        },
+        {
+          "name": "Appearance",
+          "score": 6,
+          "weight": 0.1,
+          "notes": "Acceptable"
+        }
+      ],
+      "similarityScore": 68,
+      "attachmentIds": [],
+      "notes": "Replicate 3 of pressure cook. Good reproducibility within this process.",
+      "startedAt": "2026-04-25T14:04:14.059Z",
+      "completedAt": "2026-04-25T14:04:14.059Z",
+      "createdAt": "2026-04-25T14:04:14.059Z",
+      "updatedAt": "2026-04-25T14:04:14.059Z"
+    }
+  ],
+  "scoringProfiles": [
+    {
+      "id": "default",
+      "name": "Default Scoring",
+      "dimensions": [
+        {
+          "name": "Viscosity",
+          "weight": 0.15
+        },
+        {
+          "name": "Spoonability",
+          "weight": 0.1
+        },
+        {
+          "name": "Grain Softness",
+          "weight": 0.1
+        },
+        {
+          "name": "Creaminess",
+          "weight": 0.15
+        },
+        {
+          "name": "Phase Separation",
+          "weight": 0.1
+        },
+        {
+          "name": "Sweetness Balance",
+          "weight": 0.1
+        },
+        {
+          "name": "Aroma Match",
+          "weight": 0.1
+        },
+        {
+          "name": "Aftertaste",
+          "weight": 0.1
+        },
+        {
+          "name": "Appearance",
+          "weight": 0.1
+        }
+      ]
+    }
+  ],
+  "attachments": [],
+  "notes": []
+}
