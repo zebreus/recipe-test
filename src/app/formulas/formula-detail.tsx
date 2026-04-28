@@ -473,6 +473,7 @@ export default function FormulaDetailClient({ id }: { id: string }) {
                                           massG: Number(e.target.value),
                                         })
                                       }
+                                      disabled={line.locked}
                                     />
                                   </div>
                                 </td>
