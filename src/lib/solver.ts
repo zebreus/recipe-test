@@ -364,6 +364,150 @@ export function checkIngredientOrderCompliance(
     issues,
   };
 }
+// ─── Formula Optimizer (Solver) ───
+// Adjusts masses of *unlocked* ingredient lines to minimise the sum of
+// squared deviations between the calculated per-100 g nutrition and the
+// target values.  Locked lines are held fixed.
+//
+// Algorithm: projected gradient descent on the ingredient-fraction simplex.
+//   - fractions p_j = x_j / budget  (budget = targetMassG − locked mass)
+//   - gradient projected onto the tangent space of the simplex at each step
+//   - non-negativity enforced by clipping, then re-normalised to sum = 1
+//
+// Returns a new array of FormulaLines with updated masses.
+export function runFormulaOptimizer(
+  lines: FormulaLine[],
+  ingredients: Ingredient[],
+  target: NutritionalValue[],
+  targetMassG: number
+): FormulaLine[] {
+  const locked = lines.filter((l) => l.locked);
+  const unlocked = lines.filter((l) => !l.locked);
+
+  if (unlocked.length === 0 || targetMassG <= 0) return lines;
+
+  const lockedMass = locked.reduce((sum, l) => sum + l.massG, 0);
+  const rawBudget = targetMassG - lockedMass;
+
+  // If locked lines already consume all (or more than) the target mass, set
+  // every unlocked line to 0 — there is nothing left to allocate.
+  if (rawBudget <= 0) {
+    return lines.map((l) => (l.locked ? l : { ...l, massG: 0 }));
+  }
+
+  const budget = rawBudget;
+
+  const ingById = new Map<string, Ingredient>(
+    ingredients.map((i) => [i.id, i])
+  );
+
+  // Only optimise against nutrients that have a nonzero target or at least one
+  // ingredient with a nonzero value (otherwise they are uninformative).
+  const activeNutrients = target.filter((n) => {
+    if (n.per100g !== 0) return true;
+    return unlocked.some((l) => {
+      const ing = ingById.get(l.ingredientId);
+      return (ing?.nutrition?.[n.name] ?? 0) !== 0;
+    });
+  });
+
+  const J = unlocked.length;
+
+  if (activeNutrients.length === 0) {
+    // No signal — distribute budget evenly among unlocked lines.
+    const evenMass = round2(budget / J);
+    return lines.map((l) => (l.locked ? l : { ...l, massG: evenMass }));
+  }
+
+  const N = activeNutrients.length;
+
+  // A[i][j] = per-100 g nutrition value i of unlocked ingredient j
+  const A: number[][] = activeNutrients.map((n) =>
+    unlocked.map((l) => {
+      const ing = ingById.get(l.ingredientId);
+      return ing?.nutrition?.[n.name] ?? 0;
+    })
+  );
+
+  // Absolute nutrient contribution from locked lines
+  const lockedContrib: number[] = activeNutrients.map((n) =>
+    locked.reduce((sum, l) => {
+      const ing = ingById.get(l.ingredientId);
+      return sum + (l.massG / 100) * (ing?.nutrition?.[n.name] ?? 0);
+    }, 0)
+  );
+
+  // RHS of the per-fraction linear system:
+  // sum_j(p_j * A[i][j]) should equal rhs[i]
+  // rhs[i] = (target_i * targetMassG / 100 - lockedContrib[i]) * 100 / budget
+  const rhs: number[] = activeNutrients.map(
+    (n, i) => ((n.per100g * targetMassG) / 100 - lockedContrib[i]) * 100 / budget
+  );
+
+  // Initialise fractions from current masses (fall back to even distribution).
+  const currentTotal = unlocked.reduce((s, l) => s + l.massG, 0);
+  let p: number[] =
+    currentTotal > 0
+      ? unlocked.map((l) => l.massG / currentTotal)
+      : unlocked.map(() => 1 / J);
+
+  // 400 iterations is sufficient for practical food formulations (typically
+  // ≤ 15 ingredients, ≤ 10 nutrients).  Most problems converge within 100
+  // iterations; the extra headroom handles ill-conditioned matrices without a
+  // significant runtime cost (each iteration is O(J*N) ≈ O(150) ops).
+  const MAX_ITER = 400;
+  // Normalise learning rate by the typical scale of A to improve convergence.
+  const aMax = A.flat().reduce((m, v) => Math.max(m, Math.abs(v)), 1);
+  const lr0 = 0.5 / (aMax * aMax * N);
+
+  for (let iter = 0; iter < MAX_ITER; iter++) {
+    // Residuals r[i] = sum_j(p[j]*A[i][j]) - rhs[i]
+    const r: number[] = activeNutrients.map((_, i) =>
+      p.reduce((sum, pj, j) => sum + pj * A[i][j], 0) - rhs[i]
+    );
+
+    // L2 loss gradient w.r.t. p[j]: g[j] = 2 * sum_i(r[i] * A[i][j])
+    const g: number[] = p.map((_, j) =>
+      2 * r.reduce((sum, ri, i) => sum + ri * A[i][j], 0)
+    );
+
+    // Project gradient onto simplex tangent (subtract mean so step stays on simplex)
+    const meanG = g.reduce((s, v) => s + v, 0) / J;
+    const projG = g.map((v) => v - meanG);
+
+    // Step, clip to non-negative, renormalise
+    const lr = lr0 / (1 + iter * 0.005);
+    const raw = p.map((pj, j) => Math.max(0, pj - lr * projG[j]));
+    const sumRaw = raw.reduce((s, v) => s + v, 0);
+    p = sumRaw > 1e-12 ? raw.map((v) => v / sumRaw) : p;
+
+    // Early exit when residuals are negligible
+    const loss = r.reduce((s, ri) => s + ri * ri, 0);
+    if (loss < 1e-8) break;
+  }
+
+  // Convert fractions back to masses. Round all but the last unlocked line and
+  // assign the remainder to the last to ensure the unlocked masses sum exactly
+  // to `budget` (preventing cumulative rounding drift).
+  const rawMasses = p.map((pj) => Math.max(0, pj * budget));
+  const unlockedWithMasses = unlocked.map((l, j) => {
+    let massG: number;
+    if (j < unlocked.length - 1) {
+      massG = round2(rawMasses[j]);
+    } else {
+      // Last line gets the remainder to preserve the exact budget sum.
+      const allocated = unlocked
+        .slice(0, j)
+        .reduce((sum, _, k) => sum + round2(rawMasses[k]), 0);
+      massG = round2(Math.max(0, budget - allocated));
+    }
+    return { ...l, massG };
+  });
+
+  let ui = 0;
+  return lines.map((l) => (l.locked ? l : unlockedWithMasses[ui++]));
+}
+
 export function rankTrials(
   trials: Trial[],
   formulas: Formula[],
