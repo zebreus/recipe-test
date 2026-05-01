@@ -83,6 +83,9 @@ const MIN_DEVIATION_DENOM = 1e-3;
 const MASS_TOLERANCE_G = 0.05;
 // Composition match (%) below this raises a "match too low" warning.
 const COMPOSITION_MATCH_WARN = 90;
+// Redistribution is iterative because one bounded line can hit min/max and
+// leave remaining mass to distribute over the others.
+const MAX_REDISTRIBUTION_PASSES = 20;
 
 // ─── Issue / warning types for the unified Issues card ───
 type Severity = "warning" | "error";
@@ -215,7 +218,7 @@ export default function FormulaDetailClient({ id }: { id: string }) {
     const next = [...masses];
     let remaining = remainingChange;
 
-    for (let pass = 0; pass < 20 && Math.abs(remaining) > 1e-8; pass++) {
+    for (let pass = 0; pass < MAX_REDISTRIBUTION_PASSES && Math.abs(remaining) > 1e-8; pass++) {
       const candidates = adjustableIndexes.filter((i) => {
         const { min, max } = lineBounds(local!.ingredientLines[i]);
         return remaining > 0 ? next[i] < max - 1e-8 : next[i] > min + 1e-8;
@@ -618,7 +621,12 @@ export default function FormulaDetailClient({ id }: { id: string }) {
                                 <SelectTrigger className="h-8 print:hidden">
                                   <SelectValue />
                                 </SelectTrigger>
-                                <span className="hidden print:block">{ing?.name ?? line.ingredientId}</span>
+                                <span
+                                  className="hidden print:block"
+                                  aria-label={`Ingredient: ${ing?.name ?? line.ingredientId}`}
+                                >
+                                  {ing?.name ?? line.ingredientId}
+                                </span>
                                 <SelectContent>
                                   {ingredients.map((i) => (
                                     <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
@@ -648,7 +656,10 @@ export default function FormulaDetailClient({ id }: { id: string }) {
                                   onChange={(e) => setLineMass(idx, Number(e.target.value))}
                                   disabled={line.locked}
                                 />
-                                <span className="hidden print:block tabular-nums">
+                                <span
+                                  className="hidden print:block tabular-nums"
+                                  aria-label={`Mass in grams: ${line.massG.toFixed(1)}`}
+                                >
                                   {line.massG.toFixed(1)}
                                 </span>
                                 {hasConstraint && (

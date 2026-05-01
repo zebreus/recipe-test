@@ -568,12 +568,23 @@ export function runFormulaOptimizer(
 
   // Multi-restart: first run from the current point, then several random.
   let best = runOnce(initial);
+  // When an unconstrained line has no finite max, sample restarts up to at
+  // least one budget-unit and at least twice its initial fraction so the
+  // restart still explores a meaningfully wider neighbourhood.
+  const UNBOUNDED_RESTART_MIN_SPAN = 1;
+  const UNBOUNDED_RESTART_INITIAL_MULTIPLIER = 2;
   for (let r = 1; r < restarts; r++) {
     const seed = unlocked.map((_, j) => {
       const lo = minP[j];
       const hi = Math.max(
         lo,
-        Number.isFinite(maxP[j]) ? maxP[j] : Math.max(lo + 1, initial[j] * 2, 1)
+        Number.isFinite(maxP[j])
+          ? maxP[j]
+          : Math.max(
+              lo + UNBOUNDED_RESTART_MIN_SPAN,
+              initial[j] * UNBOUNDED_RESTART_INITIAL_MULTIPLIER,
+              UNBOUNDED_RESTART_MIN_SPAN
+            )
       );
       return lo + Math.random() * (hi - lo);
     });
