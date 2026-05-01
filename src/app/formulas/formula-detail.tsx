@@ -718,17 +718,18 @@ export default function FormulaDetailClient({ id }: { id: string }) {
     return row;
   });
   const ingredientIdsInUse = contributions.map((c) => c.ingredientId);
+  const usedIngredients = ingredients.filter((i) => usedIngredientIds.has(i.id));
 
   // Radar data: one entry per tracked nutrient. Each axis is normalised
   // against the larger of (target, formula) so the polygons land on the
   // 0–1 scale and axes with very different units (kcal vs g) are visually
-  // comparable. Per-ingredient signal lives in the bar chart and the row
-  // sparklines, so the radar stays focused on target vs formula. (#10)
+  // comparable. Ingredient outlines share that same denominator and are
+  // clipped to the ring so they never shrink the target/formula shapes. (#10)
   const radarData = trackedNutrients.map((n) => {
     const target = n.per100g;
     const formulaVal = calc[n.name] ?? 0;
     const denom = Math.max(target, formulaVal, MIN_DEVIATION_DENOM);
-    return {
+    const row: RadarRow = {
       nutrient: n.name,
       Target: target / denom,
       Formula: formulaVal / denom,
@@ -737,6 +738,10 @@ export default function FormulaDetailClient({ id }: { id: string }) {
       _formula: formulaVal,
       _unit: n.unit,
     };
+    for (const ing of usedIngredients) {
+      row[`ing:${ing.id}`] = Math.min(1, (ing.nutrition?.[n.name] ?? 0) / denom);
+    }
+    return row;
   });
 
   // Resolve the two solver flags into the (mass, honor) pair the optimizer
@@ -1144,7 +1149,8 @@ export default function FormulaDetailClient({ id }: { id: string }) {
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   Each axis is one tracked nutrient, normalised to whichever is
                   larger of target and formula so all axes are comparable.
-                  Hover for absolute values.
+                  Ingredient outlines show their per-100&nbsp;g nutrient profile
+                  on the same scale. Hover for absolute values.
                 </p>
               </CardHeader>
               <CardContent>
@@ -1157,6 +1163,18 @@ export default function FormulaDetailClient({ id }: { id: string }) {
                         target/formula — otherwise recharts auto-pads the axis
                         and the chart never visually "fills". */}
                     <PolarRadiusAxis domain={[0, 1]} tick={false} axisLine={false} />
+                    {usedIngredients.map((ing) => (
+                      <Radar
+                        key={ing.id}
+                        name={ing.name}
+                        dataKey={`ing:${ing.id}`}
+                        stroke={colorForIngredient(ing.id)}
+                        strokeOpacity={0.35}
+                        fill="none"
+                        strokeWidth={1}
+                        isAnimationActive={false}
+                      />
+                    ))}
                     <Radar
                       name="Target"
                       dataKey="Target"
@@ -1174,7 +1192,7 @@ export default function FormulaDetailClient({ id }: { id: string }) {
                       fill="none"
                       isAnimationActive={false}
                     />
-                    <Tooltip content={<RadarValueTooltip />} />
+                    <Tooltip content={<RadarValueTooltip rows={radarData} />} />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
                   </RadarChart>
                 </ResponsiveContainer>
@@ -1474,8 +1492,8 @@ export default function FormulaDetailClient({ id }: { id: string }) {
 // local state so partial edits like "" or "1." don't snap back to a number
 // (and so backspacing the last "0" doesn't immediately repaint a "0" that
 // re-glues itself to the next character the user types — see #9). Changes
-// are pushed to the parent on blur, on Enter, or as soon as the buffer
-// parses to a different valid number.
+// are finalized on blur; pressing Enter blurs the field so the displayed
+// value immediately re-syncs with the value that was actually applied.
 function MassInput({
   value, step, min, max, className, disabled, onCommit,
 }: {
@@ -1539,7 +1557,8 @@ function MassInput({
       }}
       onKeyDown={(e) => {
         if (e.key === "Enter") {
-          commit((e.target as HTMLInputElement).value, false);
+          e.preventDefault();
+          (e.currentTarget as HTMLInputElement).blur();
         }
       }}
     />
@@ -1569,20 +1588,13 @@ function IssuesCard({
     ? { bg: "bg-orange-50 dark:bg-orange-900/30", text: "text-orange-700 dark:text-orange-300", border: "border-orange-200 dark:border-orange-800" }
     : { bg: "bg-green-50 dark:bg-green-900/20", text: "text-green-700 dark:text-green-300", border: "border-green-200 dark:border-green-800" };
 
-  // Sticky high-watermark for the visible issue count: the card never
-  // shrinks back down once it's grown, so the page below stops jumping
-  // around as the user slides masses in and out of compliance. Capped at
-  // ISSUES_BEFORE_COLLAPSE so the card doesn't take over the page when
-  // many issues exist — past that, we show a collapsed list with a toggle.
+  // Keep room for up to eight issue lines so the page below doesn't jump
+  // while the user slides masses in and out of compliance. Past that, the
+  // list collapses behind a toggle instead of making the card keep growing.
   // (#3, #7, #12)
   const ISSUES_BEFORE_COLLAPSE = 8;
-  const effectiveCount = Math.min(visibleIssues.length, ISSUES_BEFORE_COLLAPSE);
-  const [sticky, setSticky] = useState(effectiveCount);
-  // Bump on render when the count grows — this is React's official
-  // pattern for deriving state from props without an effect.
-  if (effectiveCount > sticky) setSticky(effectiveCount);
   // Header takes ~2.25rem; each issue line ~1.4rem; plus a little padding.
-  const minHeightRem = 2.5 + Math.max(1, sticky) * 1.4;
+  const minHeightRem = 2.5 + ISSUES_BEFORE_COLLAPSE * 1.4;
 
   const [expanded, setExpanded] = useState(false);
   const overflow = visibleIssues.length > ISSUES_BEFORE_COLLAPSE;
@@ -1923,27 +1935,20 @@ function IngredientRadar({
 // the chart serves as a quick numeric snapshot.
 interface RadarRow {
   nutrient: string;
+  Target: number;
+  Formula: number;
   _target: number;
   _formula: number;
   _unit: string;
+  [key: string]: string | number;
 }
 function RadarValueTooltip({
-  active, payload,
+  active, rows,
 }: {
   active?: boolean;
-  payload?: { payload?: RadarRow }[];
+  rows: RadarRow[];
 }) {
-  if (!active || !payload || payload.length === 0) return null;
-  // Every payload entry on a single hover shares the same data row.
-  const seen = new Set<string>();
-  const rows = payload
-    .map((p) => p.payload)
-    .filter((r): r is RadarRow => {
-      if (!r || seen.has(r.nutrient)) return false;
-      seen.add(r.nutrient);
-      return true;
-    });
-  if (rows.length === 0) return null;
+  if (!active || rows.length === 0) return null;
   return (
     <div className="rounded-md border bg-white dark:bg-gray-900 px-3 py-2 text-xs shadow-md">
       <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 font-medium text-gray-500 dark:text-gray-400 pb-1">
