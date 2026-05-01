@@ -1588,13 +1588,16 @@ function IssuesCard({
     ? { bg: "bg-orange-50 dark:bg-orange-900/30", text: "text-orange-700 dark:text-orange-300", border: "border-orange-200 dark:border-orange-800" }
     : { bg: "bg-green-50 dark:bg-green-900/20", text: "text-green-700 dark:text-green-300", border: "border-green-200 dark:border-green-800" };
 
-  // Keep room for up to eight issue lines so the page below doesn't jump
-  // while the user slides masses in and out of compliance. Past that, the
-  // list collapses behind a toggle instead of making the card keep growing.
-  // (#3, #7, #12)
+  // Grow the reserved space with the visible issue count, but cap it at
+  // eight lines and collapse the overflow behind a toggle so the card does
+  // not keep stretching the page. (#3, #7, #12)
   const ISSUES_BEFORE_COLLAPSE = 8;
+  const reservedIssueCount = Math.min(
+    Math.max(visibleIssues.length, 1),
+    ISSUES_BEFORE_COLLAPSE
+  );
   // Header takes ~2.25rem; each issue line ~1.4rem; plus a little padding.
-  const minHeightRem = 2.5 + ISSUES_BEFORE_COLLAPSE * 1.4;
+  const minHeightRem = 2.5 + reservedIssueCount * 1.4;
 
   const [expanded, setExpanded] = useState(false);
   const overflow = visibleIssues.length > ISSUES_BEFORE_COLLAPSE;
