@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useStore } from "@/lib/store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -78,6 +78,7 @@ import {
   RadarChart,
   PolarGrid,
   PolarAngleAxis,
+  PolarRadiusAxis,
   Radar,
 } from "recharts";
 
@@ -717,40 +718,40 @@ export default function FormulaDetailClient({ id }: { id: string }) {
     return row;
   });
   const ingredientIdsInUse = contributions.map((c) => c.ingredientId);
-  // Only ingredients actually present in the formula get a reference outline
-  // on the radar — rendering one per global ingredient gets noisy and slow on
-  // large libraries. Their colour is still keyed to the global index so it
-  // stays consistent with the bar chart and the per-row sparklines.
-  const usedIngredients = ingredients.filter((i) => usedIngredientIds.has(i.id));
 
-  // Radar data: one entry per tracked nutrient. We normalise every series
-  // against the larger of (target, calculated) so the polygons are all on
-  // the same 0–1 scale; that way axes with very different units (Energy in
-  // kcal vs Salt in g) are visually comparable. Per-ingredient reference
-  // outlines use 50 g of that ingredient — useful as a sanity check for
-  // "where does each nutrient come from?". (#10)
+  // Radar data: one entry per tracked nutrient. Each axis is normalised
+  // against the larger of (target, formula) so the polygons land on the
+  // 0–1 scale and axes with very different units (kcal vs g) are visually
+  // comparable. Per-ingredient signal lives in the bar chart and the row
+  // sparklines, so the radar stays focused on target vs formula. (#10)
   const radarData = trackedNutrients.map((n) => {
     const target = n.per100g;
     const formulaVal = calc[n.name] ?? 0;
-    const ingredientVals: Record<string, number> = {};
-    for (const ing of usedIngredients) {
-      ingredientVals[ing.id] = (ing.nutrition?.[n.name] ?? 0) * 0.5; // per 50 g
-    }
-    const ingredientMax = Object.values(ingredientVals).reduce(
-      (m, v) => Math.max(m, v),
-      0
-    );
-    const denom = Math.max(target, formulaVal, ingredientMax, MIN_DEVIATION_DENOM);
-    const norm: Record<string, number | string> = {
+    const denom = Math.max(target, formulaVal, MIN_DEVIATION_DENOM);
+    return {
       nutrient: n.name,
       Target: target / denom,
       Formula: formulaVal / denom,
+      // Carry the absolute values along so the tooltip can show real units.
+      _target: target,
+      _formula: formulaVal,
+      _unit: n.unit,
     };
-    for (const ing of usedIngredients) {
-      norm[`ing:${ing.id}`] = ingredientVals[ing.id] / denom;
-    }
-    return norm;
   });
+
+  // Resolve the two solver flags into the (mass, honor) pair the optimizer
+  // understands. Locked total mass takes precedence over flag A unless the
+  // user explicitly asks the solver to ignore the lock (flag B). (#6)
+  //   locked, A, B  → effect
+  //   no,    no, _  → not constrained
+  //   no,    yes,_  → constrained to target mass
+  //   yes,   no, no → constrained to locked mass   (default)
+  //   yes,   yes,no → constrained to locked mass
+  //   yes,   no, yes→ not constrained
+  //   yes,   yes,yes→ constrained to target mass
+  const lockBindsSolver = lockTotalMass && !solverSettings.ignoreLockedTotalMass;
+  const solverHonorTotal = lockBindsSolver || solverSettings.honorTotalMass;
+  const solverTargetMassG = lockBindsSolver ? totalMass : targetMassG;
 
   function runSolver() {
     if (!local) return;
@@ -758,11 +759,11 @@ export default function FormulaDetailClient({ id }: { id: string }) {
       local.ingredientLines,
       ingredients,
       trackedNutrients,
-      targetMassG,
+      solverTargetMassG,
       {
         restarts: solverSettings.restarts,
         orderingWeight: solverSettings.orderingWeight,
-        honorTotalMass: solverSettings.honorTotalMass,
+        honorTotalMass: solverHonorTotal,
       }
     );
     update({ ingredientLines: optimized });
@@ -844,6 +845,7 @@ export default function FormulaDetailClient({ id }: { id: string }) {
                   trackedNutrientNames={trackedNutrients.map((n) => n.name)}
                   settings={solverSettings}
                   setSetting={setSolverSetting}
+                  lockTotalMass={lockTotalMass}
                 />
                 <Button size="sm" variant="outline" onClick={addLine}>
                   <Plus className="h-3.5 w-3.5 mr-1" /> Add
@@ -929,15 +931,14 @@ export default function FormulaDetailClient({ id }: { id: string }) {
                                   disabled={sliderDisabled}
                                   thumbAriaLabel={`${ing?.name ?? "ingredient"} mass in grams`}
                                 />
-                                <Input
-                                  type="number"
+                                <MassInput
+                                  value={line.massG}
                                   step={MASS_STEP_G}
                                   min={line.minG ?? 0}
                                   max={Number.isFinite(boundMax) ? boundMax : undefined}
                                   className="h-8 w-20 shrink-0 print:hidden"
-                                  value={line.massG}
-                                  onChange={(e) => setLineMass(idx, Number(e.target.value))}
                                   disabled={sliderDisabled}
+                                  onCommit={(v) => setLineMass(idx, v)}
                                 />
                                 <span className="hidden print:block tabular-nums">
                                   {line.massG.toFixed(1)}
@@ -1104,6 +1105,83 @@ export default function FormulaDetailClient({ id }: { id: string }) {
 
         {/* Right column: nutrition summary */}
         <div className="space-y-4">
+          {/* Composition match — anchors the column so the headline number is
+              visible without scrolling. (#5) */}
+          <Card>
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <ComplianceBadge status={compliance.status} compliance={compliance} />
+              </div>
+              <div className="text-center">
+                <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
+                  {sim.toFixed(0)}%
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 inline-flex items-center gap-1 justify-center">
+                  Composition Match
+                  <span
+                    className="text-gray-400 dark:text-gray-500 cursor-help"
+                    title={
+                      "Composition match (0–100%) is the average per-nutrient agreement between the formula's per-100 g profile and the target. " +
+                      "For each tracked nutrient it computes 1 − |formula − target| / max(|target|, |formula|), clamps to [0,1], averages across all tracked nutrients, then scales to 0–100%."
+                    }
+                    aria-label="How is composition match calculated?"
+                  >
+                    <HelpCircle className="h-3.5 w-3.5" />
+                  </span>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Radar chart of nutrition profile (#4, #10).
+              Lives between the headline number and the per-nutrient table so
+              you read top-down: "how good is the match → what does it look
+              like → what are the exact values". */}
+          {trackedNutrients.length >= 3 && (
+            <Card className="print:hidden">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Nutrition Profile</CardTitle>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Each axis is one tracked nutrient, normalised to whichever is
+                  larger of target and formula so all axes are comparable.
+                  Hover for absolute values.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={390}>
+                  <RadarChart data={radarData} outerRadius="75%">
+                    <PolarGrid />
+                    <PolarAngleAxis dataKey="nutrient" tick={{ fontSize: 11 }} />
+                    {/* Pin the radial domain to [0, 1] so the polygons reach
+                        the outer ring whenever a nutrient hits the larger of
+                        target/formula — otherwise recharts auto-pads the axis
+                        and the chart never visually "fills". */}
+                    <PolarRadiusAxis domain={[0, 1]} tick={false} axisLine={false} />
+                    <Radar
+                      name="Target"
+                      dataKey="Target"
+                      stroke="#6b7280"
+                      strokeWidth={2}
+                      strokeDasharray="4 3"
+                      fill="none"
+                      isAnimationActive={false}
+                    />
+                    <Radar
+                      name="Formula"
+                      dataKey="Formula"
+                      stroke="#6b7280"
+                      strokeWidth={2}
+                      fill="none"
+                      isAnimationActive={false}
+                    />
+                    <Tooltip content={<RadarValueTooltip />} />
+                    <Legend wrapperStyle={{ fontSize: 11 }} />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle className="text-base">
@@ -1179,86 +1257,6 @@ export default function FormulaDetailClient({ id }: { id: string }) {
                 ) : (
                   <span className="text-right text-xs text-gray-400">no target</span>
                 )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Radar chart of nutrition profile (#10). */}
-          {trackedNutrients.length >= 3 && (
-            <Card className="print:hidden">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Nutrition Profile</CardTitle>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Each axis is one tracked nutrient, normalised to the largest value among
-                  target, formula and ingredient references so all axes are comparable.
-                </p>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={260}>
-                  <RadarChart data={radarData} outerRadius="75%">
-                    <PolarGrid />
-                    <PolarAngleAxis dataKey="nutrient" tick={{ fontSize: 10 }} />
-                    {/* Dim per-ingredient reference outlines (per 50 g) — they
-                        sit underneath the target/formula polygons. */}
-                    {usedIngredients.map((ing) => (
-                      <Radar
-                        key={ing.id}
-                        name={ing.name}
-                        dataKey={`ing:${ing.id}`}
-                        stroke={colorForIngredient(ing.id)}
-                        strokeOpacity={0.35}
-                        fill="none"
-                        strokeWidth={1}
-                        isAnimationActive={false}
-                      />
-                    ))}
-                    <Radar
-                      name="Target"
-                      dataKey="Target"
-                      stroke="#6b7280"
-                      strokeWidth={2}
-                      strokeDasharray="4 3"
-                      fill="none"
-                      isAnimationActive={false}
-                    />
-                    <Radar
-                      name="Formula"
-                      dataKey="Formula"
-                      stroke="#4f46e5"
-                      strokeWidth={2}
-                      fill="#4f46e5"
-                      fillOpacity={0.15}
-                      isAnimationActive={false}
-                    />
-                    <Legend wrapperStyle={{ fontSize: 10 }} />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          )}
-
-          <Card>
-            <CardContent className="pt-4">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <ComplianceBadge status={compliance.status} compliance={compliance} />
-              </div>
-              <div className="text-center">
-                <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
-                  {sim.toFixed(0)}%
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 inline-flex items-center gap-1 justify-center">
-                  Composition Match
-                  <span
-                    className="text-gray-400 dark:text-gray-500 cursor-help"
-                    title={
-                      "Composition match (0–100%) is the average per-nutrient agreement between the formula's per-100 g profile and the target. " +
-                      "For each tracked nutrient it computes 1 − |formula − target| / max(|target|, |formula|), clamps to [0,1], averages across all tracked nutrients, then scales to 0–100%."
-                    }
-                    aria-label="How is composition match calculated?"
-                  >
-                    <HelpCircle className="h-3.5 w-3.5" />
-                  </span>
-                </p>
               </div>
             </CardContent>
           </Card>
@@ -1472,6 +1470,81 @@ export default function FormulaDetailClient({ id }: { id: string }) {
 
 // ─── Sub-components ───
 
+// A controlled-but-buffered numeric input. Holds the user's keystrokes in
+// local state so partial edits like "" or "1." don't snap back to a number
+// (and so backspacing the last "0" doesn't immediately repaint a "0" that
+// re-glues itself to the next character the user types — see #9). Changes
+// are pushed to the parent on blur, on Enter, or as soon as the buffer
+// parses to a different valid number.
+function MassInput({
+  value, step, min, max, className, disabled, onCommit,
+}: {
+  value: number;
+  step?: number;
+  min?: number;
+  max?: number;
+  className?: string;
+  disabled?: boolean;
+  onCommit: (v: number) => void;
+}) {
+  const [draft, setDraft] = useState<string>(() => String(value));
+  const focusedRef = useRef(false);
+  const lastExternal = useRef<number>(value);
+
+  // Keep the buffer in sync when the parent's value changes for reasons
+  // other than this input's own keystrokes (slider movement, redistribute
+  // after locking, solver run, …) — but never while the user is actively
+  // typing, otherwise mid-edit clamping from the redistribution logic
+  // would clobber their in-progress value.
+  useEffect(() => {
+    if (focusedRef.current) return;
+    if (value !== lastExternal.current) {
+      lastExternal.current = value;
+      setDraft(String(value));
+    }
+  }, [value]);
+
+  function commit(raw: string) {
+    const trimmed = raw.trim();
+    if (trimmed === "") {
+      setDraft(String(value));
+      return;
+    }
+    const parsed = Number(trimmed);
+    if (!Number.isFinite(parsed)) {
+      setDraft(String(value));
+      return;
+    }
+    lastExternal.current = parsed;
+    onCommit(parsed);
+    // Don't reformat while still focused — that would jump the cursor.
+    if (!focusedRef.current) setDraft(String(parsed));
+  }
+
+  return (
+    <Input
+      type="number"
+      step={step}
+      min={min}
+      max={max}
+      className={className}
+      disabled={disabled}
+      value={draft}
+      onFocus={() => { focusedRef.current = true; }}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={(e) => {
+        focusedRef.current = false;
+        commit(e.target.value);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          commit((e.target as HTMLInputElement).value);
+        }
+      }}
+    />
+  );
+}
+
 function IssuesCard({
   compliance, visibleIssues, hiddenIssues, showHidden, setShowHidden,
   ignoreIssue, unignoreIssue,
@@ -1495,11 +1568,32 @@ function IssuesCard({
     ? { bg: "bg-orange-50 dark:bg-orange-900/30", text: "text-orange-700 dark:text-orange-300", border: "border-orange-200 dark:border-orange-800" }
     : { bg: "bg-green-50 dark:bg-green-900/20", text: "text-green-700 dark:text-green-300", border: "border-green-200 dark:border-green-800" };
 
+  // Sticky high-watermark for the visible issue count: the card never
+  // shrinks back down once it's grown, so the page below stops jumping
+  // around as the user slides masses in and out of compliance. Capped at
+  // ISSUES_BEFORE_COLLAPSE so the card doesn't take over the page when
+  // many issues exist — past that, we show a collapsed list with a toggle.
+  // (#3, #7, #12)
+  const ISSUES_BEFORE_COLLAPSE = 8;
+  const effectiveCount = Math.min(visibleIssues.length, ISSUES_BEFORE_COLLAPSE);
+  const [sticky, setSticky] = useState(effectiveCount);
+  // Bump on render when the count grows — this is React's official
+  // pattern for deriving state from props without an effect.
+  if (effectiveCount > sticky) setSticky(effectiveCount);
+  // Header takes ~2.25rem; each issue line ~1.4rem; plus a little padding.
+  const minHeightRem = 2.5 + Math.max(1, sticky) * 1.4;
+
+  const [expanded, setExpanded] = useState(false);
+  const overflow = visibleIssues.length > ISSUES_BEFORE_COLLAPSE;
+  const issuesToShow = overflow && !expanded
+    ? visibleIssues.slice(0, ISSUES_BEFORE_COLLAPSE)
+    : visibleIssues;
+
   return (
-    // Stable height (#12): keep enough room for ~5 issue lines so the page
-    // below doesn't jump as the issue count changes while sliding. The list
-    // scrolls internally when there are more issues than fit.
-    <div className={`rounded-md px-4 py-3 text-sm min-h-[10rem] flex flex-col ${palette.bg} ${palette.text} border ${palette.border}`}>
+    <div
+      className={`rounded-md px-4 py-3 text-sm flex flex-col ${palette.bg} ${palette.text} border ${palette.border}`}
+      style={{ minHeight: `${minHeightRem}rem` }}
+    >
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <AlertTriangle className="h-4 w-4 shrink-0" />
@@ -1524,10 +1618,10 @@ function IssuesCard({
           </Button>
         )}
       </div>
-      <div className="mt-2 flex-1 overflow-y-auto pr-1">
+      <div className="mt-2 flex-1">
         {visibleIssues.length > 0 && (
           <ul className="space-y-1">
-            {visibleIssues.map((iss) => (
+            {issuesToShow.map((iss) => (
               <li key={iss.key} className="flex items-start gap-2 text-xs">
                 <span className="mt-1 w-1.5 h-1.5 rounded-full shrink-0"
                       style={{ background: iss.severity === "error" ? "#dc2626" : "#f59e0b" }} />
@@ -1544,6 +1638,17 @@ function IssuesCard({
               </li>
             ))}
           </ul>
+        )}
+        {overflow && (
+          <Button
+            variant="ghost" size="sm"
+            className="h-7 mt-1 text-xs print:hidden"
+            onClick={() => setExpanded(!expanded)}
+          >
+            {expanded
+              ? "Show fewer"
+              : `Show all ${visibleIssues.length} issues`}
+          </Button>
         )}
         {showHidden && hiddenIssues.length > 0 && (
           <div className="mt-3 pt-2 border-t border-current/20">
@@ -1573,15 +1678,26 @@ function IssuesCard({
 }
 
 function SolverButtonGroup({
-  onRun, disabled, trackedNutrientNames, settings, setSetting,
+  onRun, disabled, trackedNutrientNames, settings, setSetting, lockTotalMass,
 }: {
   onRun: () => void;
   disabled: boolean;
   trackedNutrientNames: string[];
   settings: SolverSettings;
   setSetting: <K extends keyof SolverSettings>(k: K, v: SolverSettings[K]) => void;
+  lockTotalMass: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  // Resolve which mass constraint the solver will apply, given the formula's
+  // total-mass lock and the two flags. Mirrors the logic in runSolver. (#6)
+  const ignoreLocked = settings.ignoreLockedTotalMass ?? false;
+  const constrainedToLocked = lockTotalMass && !ignoreLocked;
+  const constrainedToTarget = !constrainedToLocked && settings.honorTotalMass;
+  const massConstraintLabel = constrainedToLocked
+    ? "Total mass equal to current locked mass"
+    : constrainedToTarget
+    ? "Total mass equal to target"
+    : null;
   return (
     <div className="inline-flex">
       <Button
@@ -1620,7 +1736,7 @@ function SolverButtonGroup({
                 {trackedNutrientNames.length === 0
                   ? <li>No tracked nutrients (configure on Target page)</li>
                   : trackedNutrientNames.map((n) => <li key={n}>{n}</li>)}
-                {settings.honorTotalMass && <li>Total mass equal to target</li>}
+                {massConstraintLabel && <li>{massConstraintLabel}</li>}
                 {settings.orderingWeight > 0 && <li>Ingredient masses descending in line order</li>}
                 <li>Per-ingredient min/max ranges and locks</li>
               </ul>
@@ -1648,14 +1764,27 @@ function SolverButtonGroup({
                 0 = ignore line order; higher values strongly prefer solutions where each line is heavier than the line below it.
               </p>
             </div>
+            {/* Two flags governing how the solver treats total mass. (#6)
+                Flag B is only meaningful when the formula has its total mass
+                locked — otherwise we hide it. */}
             <label className="flex items-center gap-2 text-xs">
               <input
                 type="checkbox"
                 checked={settings.honorTotalMass}
                 onChange={(e) => setSetting("honorTotalMass", e.target.checked)}
               />
-              Constrain unlocked total to the target mass
+              Constrain to the target mass
             </label>
+            {lockTotalMass && (
+              <label className="flex items-center gap-2 text-xs">
+                <input
+                  type="checkbox"
+                  checked={ignoreLocked}
+                  onChange={(e) => setSetting("ignoreLockedTotalMass", e.target.checked)}
+                />
+                Ignore locked total mass
+              </label>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Close</Button>
@@ -1763,14 +1892,18 @@ function IngredientRadar({
   }));
   return (
     <div
-      className="w-8 h-8 shrink-0 print:hidden"
+      className="w-8 h-8 shrink-0 print:hidden pointer-events-none"
       title={`${trackedNutrients
         .map((n) => `${n.name}: ${(ingredient.nutrition?.[n.name] ?? 0).toFixed(1)}`)
         .join(", ")} (per 100 g)`}
     >
       <ResponsiveContainer width="100%" height="100%">
-        <RadarChart data={data} outerRadius="80%">
+        <RadarChart data={data} outerRadius="90%">
           <PolarGrid stroke="currentColor" strokeOpacity={0.15} />
+          {/* Pin the radial domain so the polygon's largest axis touches the
+              outer ring — without this recharts auto-pads to "nice" ticks
+              (e.g. 0–1.2) and the star never visually fills. (#11) */}
+          <PolarRadiusAxis domain={[0, 1]} tick={false} axisLine={false} />
           <Radar
             dataKey="v"
             stroke={color}
@@ -1780,6 +1913,52 @@ function IngredientRadar({
           />
         </RadarChart>
       </ResponsiveContainer>
+    </div>
+  );
+}
+
+// ─── Tooltip for the big nutrition radar (#10, #8) ───
+// Shows the absolute value of every tracked nutrient at once so hovering
+// the chart serves as a quick numeric snapshot.
+interface RadarRow {
+  nutrient: string;
+  _target: number;
+  _formula: number;
+  _unit: string;
+}
+function RadarValueTooltip({
+  active, payload,
+}: {
+  active?: boolean;
+  payload?: { payload?: RadarRow }[];
+}) {
+  if (!active || !payload || payload.length === 0) return null;
+  // Every payload entry on a single hover shares the same data row.
+  const seen = new Set<string>();
+  const rows = payload
+    .map((p) => p.payload)
+    .filter((r): r is RadarRow => {
+      if (!r || seen.has(r.nutrient)) return false;
+      seen.add(r.nutrient);
+      return true;
+    });
+  if (rows.length === 0) return null;
+  return (
+    <div className="rounded-md border bg-white dark:bg-gray-900 px-3 py-2 text-xs shadow-md">
+      <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 font-medium text-gray-500 dark:text-gray-400 pb-1">
+        <span>Nutrient</span>
+        <span className="text-right">Formula</span>
+        <span className="text-right">Target</span>
+      </div>
+      {rows.map((r) => (
+        <div key={r.nutrient} className="grid grid-cols-[1fr_auto_auto] gap-x-3 tabular-nums">
+          <span className="text-gray-700 dark:text-gray-200">{r.nutrient}</span>
+          <span className="text-right">{r._formula.toFixed(2)}&nbsp;{r._unit}</span>
+          <span className="text-right text-gray-500 dark:text-gray-400">
+            {r._target.toFixed(2)}&nbsp;{r._unit}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }
