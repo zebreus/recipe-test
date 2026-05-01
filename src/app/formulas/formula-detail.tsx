@@ -53,7 +53,7 @@ import type {
   Trial,
   SolverSettings,
 } from "@/lib/types";
-import { nutritionColor, ingredientColor, DEFAULT_SOLVER_SETTINGS } from "@/lib/types";
+import { nutritionColor, ingredientColor, ingredientColorAtIndex, DEFAULT_SOLVER_SETTINGS } from "@/lib/types";
 import {
   calculateFormulaNutrition,
   calculateMassBalance,
@@ -168,7 +168,7 @@ export default function FormulaDetailClient({ id }: { id: string }) {
     ingredients.map((i) => [i.id, ingredientColor(i.id, ingredientIndexById)])
   );
   const colorForIngredient = (ingredientId: string) =>
-    ingredientColorById.get(ingredientId) ?? ingredientColor(ingredientId, ingredientIndexById);
+    ingredientColorById.get(ingredientId) ?? ingredientColorAtIndex(0);
   const usedIngredientIds = new Set(local.ingredientLines.map((l) => l.ingredientId));
 
   function handleSaveClick() {
@@ -304,7 +304,8 @@ export default function FormulaDetailClient({ id }: { id: string }) {
   }
 
   function snapAndClampLineMass(index: number, mass: number): number {
-    return clampLineMass(local!.ingredientLines[index], snapMass(mass));
+    if (!local) return snapMass(mass);
+    return clampLineMass(local.ingredientLines[index], snapMass(mass));
   }
 
   /**
