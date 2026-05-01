@@ -718,7 +718,8 @@ export default function FormulaDetailClient({ id }: { id: string }) {
     return row;
   });
   const ingredientIdsInUse = contributions.map((c) => c.ingredientId);
-  const usedIngredients = ingredients.filter((i) => ingredientIdsInUse.includes(i.id));
+  const ingredientIdsInUseSet = new Set(ingredientIdsInUse);
+  const usedIngredients = ingredients.filter((i) => ingredientIdsInUseSet.has(i.id));
 
   // Radar data: one entry per tracked nutrient. Each axis is normalised
   // against the larger of (target, formula) so the polygons land on the
@@ -1908,27 +1909,29 @@ function IngredientRadar({
   }));
   return (
     <div
-      className="w-8 h-8 shrink-0 print:hidden pointer-events-none"
+      className="w-8 h-8 shrink-0 print:hidden"
       title={`${trackedNutrients
         .map((n) => `${n.name}: ${(ingredient.nutrition?.[n.name] ?? 0).toFixed(1)}`)
         .join(", ")} (per 100 g)`}
     >
-      <ResponsiveContainer width="100%" height="100%">
-        <RadarChart data={data} outerRadius="90%">
-          <PolarGrid stroke="currentColor" strokeOpacity={0.15} />
-          {/* Pin the radial domain so the polygon's largest axis touches the
-              outer ring — without this recharts auto-pads to "nice" ticks
-              (e.g. 0–1.2) and the star never visually fills. (#11) */}
-          <PolarRadiusAxis domain={[0, 1]} tick={false} axisLine={false} />
-          <Radar
-            dataKey="v"
-            stroke={color}
-            fill={color}
-            fillOpacity={0.55}
-            isAnimationActive={false}
-          />
-        </RadarChart>
-      </ResponsiveContainer>
+      <div className="w-full h-full pointer-events-none">
+        <ResponsiveContainer width="100%" height="100%">
+          <RadarChart data={data} outerRadius="90%">
+            <PolarGrid stroke="currentColor" strokeOpacity={0.15} />
+            {/* Pin the radial domain so the polygon's largest axis touches the
+                outer ring — without this recharts auto-pads to "nice" ticks
+                (e.g. 0–1.2) and the star never visually fills. (#11) */}
+            <PolarRadiusAxis domain={[0, 1]} tick={false} axisLine={false} />
+            <Radar
+              dataKey="v"
+              stroke={color}
+              fill={color}
+              fillOpacity={0.55}
+              isAnimationActive={false}
+            />
+          </RadarChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }
