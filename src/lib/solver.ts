@@ -453,15 +453,15 @@ export function runFormulaOptimizer(
   );
 
   // Per-fraction bounds derived from per-line minG/maxG (relative to budget).
+  const boundFraction = (grams: number): number => {
+    const fraction = grams / budget;
+    return Math.max(0, honorTotalMass ? Math.min(1, fraction) : fraction);
+  };
   const minP = unlocked.map((l) =>
-    typeof l.minG === "number"
-      ? Math.max(0, honorTotalMass ? Math.min(1, l.minG / budget) : l.minG / budget)
-      : 0
+    typeof l.minG === "number" ? boundFraction(l.minG) : 0
   );
   const maxP = unlocked.map((l) =>
-    typeof l.maxG === "number"
-      ? Math.max(0, honorTotalMass ? Math.min(1, l.maxG / budget) : l.maxG / budget)
-      : honorTotalMass ? 1 : Infinity
+    typeof l.maxG === "number" ? boundFraction(l.maxG) : (honorTotalMass ? 1 : Infinity)
   );
   // If bounds are inconsistent (min > max) clamp max up to min so the
   // solver doesn't deadlock; the UI surfaces this as a warning.

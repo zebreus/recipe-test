@@ -86,6 +86,7 @@ const COMPOSITION_MATCH_WARN = 90;
 // Redistribution is iterative because one bounded line can hit min/max and
 // leave remaining mass to distribute over the others.
 const MAX_REDISTRIBUTION_PASSES = 20;
+const REDISTRIBUTION_EPS = 1e-8;
 
 // ─── Issue / warning types for the unified Issues card ───
 type Severity = "warning" | "error";
@@ -218,11 +219,12 @@ export default function FormulaDetailClient({ id }: { id: string }) {
     const next = [...masses];
     let remaining = remainingChange;
 
-    for (let pass = 0; pass < MAX_REDISTRIBUTION_PASSES && Math.abs(remaining) > 1e-8; pass++) {
+    for (let pass = 0; pass < MAX_REDISTRIBUTION_PASSES && Math.abs(remaining) > REDISTRIBUTION_EPS; pass++) {
       const candidates = adjustableIndexes.filter((i) => {
         const { min, max } = lineBounds(local!.ingredientLines[i]);
-        return remaining > 0 ? next[i] < max - 1e-8 : next[i] > min + 1e-8;
+        return remaining > 0 ? next[i] < max - REDISTRIBUTION_EPS : next[i] > min + REDISTRIBUTION_EPS;
       });
+      // Early exit: no remaining line has capacity to accept the change.
       if (candidates.length === 0) break;
 
       const weights = candidates.map((i) => Math.max(next[i], 1));
@@ -239,7 +241,8 @@ export default function FormulaDetailClient({ id }: { id: string }) {
         applied += actual;
       });
 
-      if (Math.abs(applied) < 1e-8) break;
+      // Early exit: numerical precision left us unable to make progress.
+      if (Math.abs(applied) < REDISTRIBUTION_EPS) break;
       remaining -= applied;
     }
 
