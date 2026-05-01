@@ -203,6 +203,9 @@ export default function FormulaDetailClient({ id }: { id: string }) {
   function lineBounds(line: FormulaLine): { min: number; max: number } {
     const min = Math.max(0, line.minG ?? 0);
     const rawMax = line.maxG ?? Infinity;
+    // Keep malformed persisted or edited ranges usable: if maxG < minG,
+    // treat max as equal to min so controls and redistribution never receive
+    // an invalid range.
     return { min, max: Math.max(min, rawMax) };
   }
 
@@ -211,6 +214,12 @@ export default function FormulaDetailClient({ id }: { id: string }) {
     return Math.max(min, Math.min(max, Number.isFinite(mass) ? mass : min));
   }
 
+  /**
+   * Applies `remainingChange` across `adjustableIndexes` while respecting each
+   * line's min/max bounds. Positive values grow the adjustable lines; negative
+   * values shrink them. The loop repeats because a line may hit a bound and
+   * leave the rest of the change to distribute over the remaining slack.
+   */
   function distributeAcrossBoundedLines(
     masses: number[],
     adjustableIndexes: number[],
