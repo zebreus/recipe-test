@@ -375,7 +375,7 @@ export function checkIngredientOrderCompliance(
 // Algorithm: projected gradient descent on the ingredient-fraction simplex
 // with multiple random restarts; the best run wins.
 export interface SolverConfig {
-  restarts?: number;        // independent restarts (default 8)
+  restarts?: number;        // independent restarts (default 1)
   orderingWeight?: number;  // soft penalty weight for line-order preference
   honorTotalMass?: boolean; // when false the unlocked sum is unconstrained
 }
@@ -394,16 +394,22 @@ export function runFormulaOptimizer(
   const locked = lines.filter((l) => l.locked);
   const unlocked = lines.filter((l) => !l.locked);
 
-  if (unlocked.length === 0 || targetMassG <= 0) return lines;
+  if (unlocked.length === 0 || (honorTotalMass && targetMassG <= 0)) return lines;
 
   const lockedMass = locked.reduce((sum, l) => sum + l.massG, 0);
-  const rawBudget = targetMassG - lockedMass;
+  const currentUnlockedMass = unlocked.reduce((sum, l) => sum + l.massG, 0);
+  const rawBudget = honorTotalMass
+    ? targetMassG - lockedMass
+    : currentUnlockedMass > 0
+    ? currentUnlockedMass
+    : Math.max(1, targetMassG - lockedMass);
 
-  if (rawBudget <= 0) {
+  if (honorTotalMass && rawBudget <= 0) {
     return lines.map((l) => (l.locked ? l : { ...l, massG: 0 }));
   }
 
   const budget = rawBudget;
+  const effectiveTargetMassG = honorTotalMass ? targetMassG : lockedMass + budget;
 
   const ingById = new Map<string, Ingredient>(
     ingredients.map((i) => [i.id, i])
@@ -420,6 +426,7 @@ export function runFormulaOptimizer(
   const J = unlocked.length;
 
   if (activeNutrients.length === 0 && orderingWeight === 0) {
+    if (!honorTotalMass) return lines;
     const evenMass = round2(budget / J);
     return lines.map((l) => (l.locked ? l : { ...l, massG: evenMass }));
   }
@@ -442,15 +449,19 @@ export function runFormulaOptimizer(
   );
 
   const rhs: number[] = activeNutrients.map(
-    (n, i) => ((n.per100g * targetMassG) / 100 - lockedContrib[i]) * 100 / budget
+    (n, i) => ((n.per100g * effectiveTargetMassG) / 100 - lockedContrib[i]) * 100 / budget
   );
 
   // Per-fraction bounds derived from per-line minG/maxG (relative to budget).
   const minP = unlocked.map((l) =>
-    typeof l.minG === "number" ? Math.max(0, Math.min(1, l.minG / budget)) : 0
+    typeof l.minG === "number"
+      ? Math.max(0, honorTotalMass ? Math.min(1, l.minG / budget) : l.minG / budget)
+      : 0
   );
   const maxP = unlocked.map((l) =>
-    typeof l.maxG === "number" ? Math.max(0, Math.min(1, l.maxG / budget)) : 1
+    typeof l.maxG === "number"
+      ? Math.max(0, honorTotalMass ? Math.min(1, l.maxG / budget) : l.maxG / budget)
+      : honorTotalMass ? 1 : Infinity
   );
   // If bounds are inconsistent (min > max) clamp max up to min so the
   // solver doesn't deadlock; the UI surfaces this as a warning.
@@ -461,7 +472,9 @@ export function runFormulaOptimizer(
   // Initial point honouring bounds; prefer current masses.
   const currentTotal = unlocked.reduce((s, l) => s + l.massG, 0);
   const initial: number[] =
-    currentTotal > 0
+    !honorTotalMass
+      ? unlocked.map((l) => l.massG / budget)
+    : currentTotal > 0
       ? unlocked.map((l) => l.massG / currentTotal)
       : unlocked.map(() => 1 / J);
 
@@ -558,7 +571,10 @@ export function runFormulaOptimizer(
   for (let r = 1; r < restarts; r++) {
     const seed = unlocked.map((_, j) => {
       const lo = minP[j];
-      const hi = Math.max(lo, maxP[j]);
+      const hi = Math.max(
+        lo,
+        Number.isFinite(maxP[j]) ? maxP[j] : Math.max(lo + 1, initial[j] * 2, 1)
+      );
       return lo + Math.random() * (hi - lo);
     });
     const candidate = runOnce(seed);

@@ -52,7 +52,12 @@ body {
   /* Hide site chrome and interactive controls. */
   aside,
   nav,
+  button,
+  input,
+  select,
+  textarea,
   [role="slider"],
+  [role="combobox"],
   .lg\:hidden {
     display: none !important;
   }

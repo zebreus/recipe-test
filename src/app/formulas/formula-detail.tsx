@@ -127,7 +127,10 @@ export default function FormulaDetailClient({ id }: { id: string }) {
   const targetMassG = data.targetProduct.targetMassG;
   const trackedNutrients = data.targetProduct.targetNutrition;
   const targetIngredients = data.targetProduct.targetIngredients ?? [];
-  const solverSettings: SolverSettings = local.solverSettings ?? DEFAULT_SOLVER_SETTINGS;
+  const solverSettings: SolverSettings = {
+    ...DEFAULT_SOLVER_SETTINGS,
+    ...(local.solverSettings ?? {}),
+  };
   const ignoredWarnings = local.ignoredWarnings ?? [];
 
   function handleSaveClick() {
@@ -193,6 +196,53 @@ export default function FormulaDetailClient({ id }: { id: string }) {
     });
   }
 
+  function lineBounds(line: FormulaLine): { min: number; max: number } {
+    const min = Math.max(0, line.minG ?? 0);
+    const rawMax = line.maxG ?? Infinity;
+    return { min, max: Math.max(min, rawMax) };
+  }
+
+  function clampLineMass(line: FormulaLine, mass: number): number {
+    const { min, max } = lineBounds(line);
+    return Math.max(min, Math.min(max, Number.isFinite(mass) ? mass : min));
+  }
+
+  function distributeAcrossBoundedLines(
+    masses: number[],
+    adjustableIndexes: number[],
+    remainingChange: number
+  ): number[] {
+    const next = [...masses];
+    let remaining = remainingChange;
+
+    for (let pass = 0; pass < 20 && Math.abs(remaining) > 1e-8; pass++) {
+      const candidates = adjustableIndexes.filter((i) => {
+        const { min, max } = lineBounds(local!.ingredientLines[i]);
+        return remaining > 0 ? next[i] < max - 1e-8 : next[i] > min + 1e-8;
+      });
+      if (candidates.length === 0) break;
+
+      const weights = candidates.map((i) => Math.max(next[i], 1));
+      const totalWeight = weights.reduce((s, w) => s + w, 0);
+      let applied = 0;
+
+      candidates.forEach((i, idx) => {
+        const { min, max } = lineBounds(local!.ingredientLines[i]);
+        const desired = remaining * (weights[idx] / totalWeight);
+        const actual = remaining > 0
+          ? Math.min(desired, max - next[i])
+          : Math.max(desired, min - next[i]);
+        next[i] += actual;
+        applied += actual;
+      });
+
+      if (Math.abs(applied) < 1e-8) break;
+      remaining -= applied;
+    }
+
+    return next;
+  }
+
   // Mass-preserving slider behaviour. When `local.lockTotalMass` is true,
   // changing one line's mass proportionally rescales the other unlocked
   // lines so the overall total stays constant. The line being changed and
@@ -200,43 +250,51 @@ export default function FormulaDetailClient({ id }: { id: string }) {
   function setLineMass(index: number, newMass: number) {
     const lines = local!.ingredientLines;
     const oldMass = lines[index].massG;
-    const newMassClamped = Math.max(0, newMass);
+    const requestedMass = clampLineMass(lines[index], newMass);
 
     if (!local!.lockTotalMass) {
       const updated = lines.map((l, i) =>
-        i === index ? { ...l, massG: newMassClamped } : l
+        i === index ? { ...l, massG: requestedMass } : l
       );
       update({ ingredientLines: updated });
       return;
     }
 
-    // With lockTotalMass: redistribute the delta over the other unlocked
-    // lines, weighted by their current mass.
-    const others = lines
+    const otherIndexes = lines
       .map((l, i) => ({ l, i }))
-      .filter(({ l, i }) => i !== index && !l.locked);
-    const otherTotal = others.reduce((s, { l }) => s + l.massG, 0);
-    const delta = newMassClamped - oldMass;
+      .filter(({ l, i }) => i !== index && !l.locked)
+      .map(({ i }) => i);
+    const delta = requestedMass - oldMass;
 
-    if (otherTotal <= 0 || others.length === 0) {
+    if (otherIndexes.length === 0 || Math.abs(delta) < 1e-8) {
       // Nothing to rescale against — just set the value.
       const updated = lines.map((l, i) =>
-        i === index ? { ...l, massG: newMassClamped } : l
+        i === index ? { ...l, massG: requestedMass } : l
       );
       update({ ingredientLines: updated });
       return;
     }
 
-    // Cap the delta so no other line goes below zero (equivalent to
-    // distributing only as much as `otherTotal` can absorb).
-    const maxAbsorb = otherTotal; // they can shrink by at most their total
-    const safeDelta = Math.max(-otherTotal, Math.min(maxAbsorb, delta));
-    const factor = (otherTotal - safeDelta) / otherTotal;
-    const updated = lines.map((l, i) => {
-      if (i === index) return { ...l, massG: oldMass + safeDelta };
-      if (l.locked || others.findIndex((o) => o.i === i) === -1) return l;
-      return { ...l, massG: Math.max(0, l.massG * factor) };
-    });
+    const shrinkCapacity = otherIndexes.reduce((sum, i) => {
+      const { min } = lineBounds(lines[i]);
+      return sum + Math.max(0, lines[i].massG - min);
+    }, 0);
+    const growCapacity = otherIndexes.reduce((sum, i) => {
+      const { max } = lineBounds(lines[i]);
+      return sum + Math.max(0, max - lines[i].massG);
+    }, 0);
+
+    // If the edited line grows, other lines must shrink; if it shrinks, other
+    // lines must grow. Bound the edited delta by the remaining capacity of the
+    // other unlocked lines so the total can stay fixed without violating ranges.
+    const safeDelta = delta > 0
+      ? Math.min(delta, shrinkCapacity)
+      : Math.max(delta, -growCapacity);
+    const masses = lines.map((l) => l.massG);
+    masses[index] = oldMass + safeDelta;
+    const redistributed = distributeAcrossBoundedLines(masses, otherIndexes, -safeDelta);
+
+    const updated = lines.map((l, i) => ({ ...l, massG: redistributed[i] }));
     update({ ingredientLines: updated });
   }
 
@@ -404,7 +462,11 @@ export default function FormulaDetailClient({ id }: { id: string }) {
   const hiddenIssues = issues.filter((i) => ignoredWarnings.includes(i.key));
 
   function ignoreIssue(key: string) {
-    update({ ignoredWarnings: [...ignoredWarnings, key] });
+    update({
+      ignoredWarnings: ignoredWarnings.includes(key)
+        ? ignoredWarnings
+        : [...ignoredWarnings, key],
+    });
   }
   function unignoreIssue(key: string) {
     update({ ignoredWarnings: ignoredWarnings.filter((k) => k !== key) });
@@ -543,8 +605,8 @@ export default function FormulaDetailClient({ id }: { id: string }) {
                         const hasConstraint = line.minG !== undefined || line.maxG !== undefined;
                         // Effective slider/input bounds — driven by per-line constraints
                         // when present, otherwise by the table's overall slider max.
-                        const effectiveMin = Math.max(0, line.minG ?? 0);
-                        const effectiveMax = Math.min(sliderMax, line.maxG ?? sliderMax);
+                        const { min: effectiveMin, max: boundMax } = lineBounds(line);
+                        const effectiveMax = Math.max(effectiveMin, Math.min(sliderMax, boundMax));
                         const sliderValue = Math.max(effectiveMin, Math.min(effectiveMax, line.massG));
                         return (
                           <tr key={idx} className="border-b last:border-0">
@@ -553,9 +615,10 @@ export default function FormulaDetailClient({ id }: { id: string }) {
                                 value={line.ingredientId}
                                 onValueChange={(val) => updateLine(idx, { ingredientId: val })}
                               >
-                                <SelectTrigger className="h-8">
+                                <SelectTrigger className="h-8 print:hidden">
                                   <SelectValue />
                                 </SelectTrigger>
+                                <span className="hidden print:block">{ing?.name ?? line.ingredientId}</span>
                                 <SelectContent>
                                   {ingredients.map((i) => (
                                     <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
@@ -579,12 +642,15 @@ export default function FormulaDetailClient({ id }: { id: string }) {
                                   type="number"
                                   step="0.1"
                                   min={line.minG ?? 0}
-                                  max={line.maxG}
-                                  className="h-8 w-20 shrink-0"
+                                  max={Number.isFinite(boundMax) ? boundMax : undefined}
+                                  className="h-8 w-20 shrink-0 print:hidden"
                                   value={line.massG}
                                   onChange={(e) => setLineMass(idx, Number(e.target.value))}
                                   disabled={line.locked}
                                 />
+                                <span className="hidden print:block tabular-nums">
+                                  {line.massG.toFixed(1)}
+                                </span>
                                 {hasConstraint && (
                                   <span
                                     className="text-[10px] text-gray-500 dark:text-gray-400 print:hidden"
@@ -1259,7 +1325,8 @@ function ConstraintDialog({
           <Button
             onClick={() => {
               const min = minStr.trim() === "" ? undefined : Math.max(0, Number(minStr));
-              const max = maxStr.trim() === "" ? undefined : Math.max(0, Number(maxStr));
+              const rawMax = maxStr.trim() === "" ? undefined : Math.max(0, Number(maxStr));
+              const max = min !== undefined && rawMax !== undefined && rawMax < min ? min : rawMax;
               onSave(min, max);
             }}
           >
