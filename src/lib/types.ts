@@ -177,16 +177,21 @@ export interface SolverSettings {
   // Soft penalty weight for keeping ingredient masses in descending order
   // matching the ingredient-line order on the formula. 0 = ignore order.
   orderingWeight: number;
-  // When false the solver just minimises nutrition deviation regardless of
-  // total mass. When true it constrains the unlocked sum to fit the budget
-  // (this is the default behaviour and matches the historic solver).
+  // Flag A — when true the solver constrains the unlocked sum to the target
+  // mass. When the formula's total mass is locked and `ignoreLockedTotalMass`
+  // is false, the locked total takes precedence and this flag has no effect.
   honorTotalMass: boolean;
+  // Flag B — when true the solver pretends the formula's total-mass lock is
+  // off, so flag A alone decides whether the unlocked sum is constrained.
+  // Only meaningful when the formula has its total mass locked.
+  ignoreLockedTotalMass?: boolean;
 }
 
 export const DEFAULT_SOLVER_SETTINGS: SolverSettings = {
   restarts: 8,
   orderingWeight: 0.5,
   honorTotalMass: true,
+  ignoreLockedTotalMass: false,
 };
 
 export interface MassBalance {
