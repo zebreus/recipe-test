@@ -210,9 +210,7 @@ function snapToBudget(
       const canAdd = Math.floor(
         Math.max(0, maxG - snapped[idx].massG) / MASS_STEP_G
       );
-      const toAdd = canAdd === Infinity
-        ? remaining
-        : Math.min(remaining, canAdd);
+      const toAdd = Math.min(remaining, canAdd);
       if (toAdd > 0) {
         snapped[idx] = {
           ...snapped[idx],
